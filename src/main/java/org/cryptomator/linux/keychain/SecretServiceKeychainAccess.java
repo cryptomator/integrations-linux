@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-class LinuxSecretServiceKeychainAccessImpl implements KeychainAccessProvider {
+public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 
 	private final String LABEL_FOR_SECRET_IN_KEYRING = "Cryptomator";
 
@@ -29,12 +29,11 @@ class LinuxSecretServiceKeychainAccessImpl implements KeychainAccessProvider {
 			List<String> list = keyring.getItems(createAttributes(key));
 			if (list == null) {
 				keyring.createItem(LABEL_FOR_SECRET_IN_KEYRING, passphrase, createAttributes(key));
-			}
-			else {
+			} else {
 				changePassphrase(key, passphrase);
 			}
 		} catch (IOException e) {
-			throw new KeychainAccessException("TODO",e); //FIXME
+			throw new KeychainAccessException("Storing password failed.", e);
 		}
 	}
 
@@ -48,7 +47,7 @@ class LinuxSecretServiceKeychainAccessImpl implements KeychainAccessProvider {
 				return null;
 			}
 		} catch (IOException e) {
-			throw new KeychainAccessException("TODO",e); //FIXME
+			throw new KeychainAccessException("Loading password failed.", e);
 		}
 	}
 
@@ -60,7 +59,7 @@ class LinuxSecretServiceKeychainAccessImpl implements KeychainAccessProvider {
 				keyring.deleteItem(list.get(0));
 			}
 		} catch (IOException e) {
-			throw new KeychainAccessException("TODO",e); //FIXME
+			throw new KeychainAccessException("Deleting password failed.", e);
 		}
 	}
 
@@ -72,7 +71,7 @@ class LinuxSecretServiceKeychainAccessImpl implements KeychainAccessProvider {
 				keyring.updateItem(list.get(0), LABEL_FOR_SECRET_IN_KEYRING, passphrase, createAttributes(key));
 			}
 		} catch (IOException e) {
-			throw new KeychainAccessException("TODO",e); //FIXME
+			throw new KeychainAccessException("Changing password failed.", e);
 		}
 	}
 

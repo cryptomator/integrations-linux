@@ -1,1 +1,2 @@
-org.cryptomator.linux.keychain.LinuxSystemKeychainAccess
+org.cryptomator.linux.keychain.KDEWalletKeychainAccess
+org.cryptomator.linux.keychain.SecretServiceKeychainAccess
