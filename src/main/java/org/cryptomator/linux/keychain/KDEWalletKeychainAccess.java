@@ -11,9 +11,11 @@ import org.purejava.KDEWallet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.Optional;
 
-public class KDEWalletKeychainAccess implements KeychainAccessProvider {
+public class KDEWalletKeychainAccess implements KeychainAccessProvider, PropertyChangeListener {
 
 	private static final Logger LOG = LoggerFactory.getLogger(KDEWalletKeychainAccess.class);
 	private static final String FOLDER_NAME = "Cryptomator";
@@ -59,6 +61,15 @@ public class KDEWalletKeychainAccess implements KeychainAccessProvider {
 	public void changePassphrase(String key, CharSequence passphrase) throws KeychainAccessException {
 		Preconditions.checkState(wallet.isPresent(), "Keychain not supported.");
 		wallet.get().changePassphrase(key, passphrase);
+	}
+
+	@Override
+	public void propertyChange(PropertyChangeEvent event) {
+		if (event.getPropertyName().equals("KWallet.walletAsyncOpened")) {
+			Preconditions.checkState(wallet.isPresent(), "Keychain not supported.");
+			wallet.get().handle = (int) event.getNewValue();
+			LOG.info("Wallet successfully initialized.");
+		}
 	}
 
 	private static class ConnectedWallet {
@@ -141,15 +152,10 @@ public class KDEWalletKeychainAccess implements KeychainAccessProvider {
 					return true;
 				}
 				wallet.openAsync(Static.DEFAULT_WALLET, 0, APP_NAME, false);
-				wallet.getSignalHandler().await(KWallet.walletAsyncOpened.class, Static.ObjectPaths.KWALLETD5, () -> null);
-				handle = wallet.getSignalHandler().getLastHandledSignal(KWallet.walletAsyncOpened.class, Static.ObjectPaths.KWALLETD5).handle;
-				LOG.debug("Wallet successfully initialized.");
 				return handle != -1;
 			} catch (RuntimeException e) {
 				throw new KeychainAccessException("Asynchronous opening the wallet failed.", e);
 			}
 		}
-
-
 	}
 }
