@@ -69,7 +69,9 @@ public class KDEWalletKeychainAccess implements KeychainAccessProvider, Property
 		if (event.getPropertyName().equals("KWallet.walletAsyncOpened")) {
 			Preconditions.checkState(wallet.isPresent(), "Keychain not supported.");
 			wallet.get().handle = (int) event.getNewValue();
-			LOG.info("Wallet successfully initialized.");
+			if (wallet.get().handle != -1) {
+				LOG.info("Wallet successfully opened.");
+			}
 		}
 	}
 
