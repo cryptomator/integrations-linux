@@ -28,6 +28,7 @@ public class KDEWalletKeychainAccess implements KeychainAccessProvider, Property
 		try {
 			DBusConnection conn = DBusConnection.getConnection(DBusConnection.DBusBusType.SESSION);
 			wallet = new ConnectedWallet(conn);
+			wallet.wallet.getSignalHandler().addPropertyChangeListener(this);
 		} catch (DBusException e) {
 			LOG.warn("Connecting to D-Bus failed.", e);
 		}
