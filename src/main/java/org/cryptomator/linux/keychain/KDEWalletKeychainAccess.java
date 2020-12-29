@@ -24,7 +24,15 @@ public class KDEWalletKeychainAccess implements KeychainAccessProvider {
 	public KDEWalletKeychainAccess() {
 		ConnectedWallet wallet = null;
 		try {
-			DBusConnection conn = DBusConnection.getConnection(DBusConnection.DBusBusType.SESSION);
+			DBusConnection conn = null;
+			try {
+				conn = DBusConnection.getConnection(DBusConnection.DBusBusType.SESSION);
+			} catch (RuntimeException e) {
+				LOG.warn("SESSION DBus not found.", e);
+			}
+			if(conn == null){
+				conn = DBusConnection.getConnection(DBusConnection.DBusBusType.SYSTEM);
+			}
 			wallet = new ConnectedWallet(conn);
 		} catch (DBusException e) {
 			LOG.warn("Connecting to D-Bus failed.", e);
