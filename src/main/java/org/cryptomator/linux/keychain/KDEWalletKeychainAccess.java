@@ -28,9 +28,11 @@ public class KDEWalletKeychainAccess implements KeychainAccessProvider {
 			try {
 				conn = DBusConnection.getConnection(DBusConnection.DBusBusType.SESSION);
 			} catch (RuntimeException e) {
-				LOG.warn("SESSION DBus not found.", e);
+				if (e.getMessage() == "Cannot Resolve Session Bus Address") {
+					LOG.warn("SESSION DBus not found.");
+				}
 			}
-			if(conn == null){
+			if (conn == null) {
 				conn = DBusConnection.getConnection(DBusConnection.DBusBusType.SYSTEM);
 			}
 			wallet = new ConnectedWallet(conn);
