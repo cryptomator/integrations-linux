@@ -1,6 +1,5 @@
-package keychain;
+package org.cryptomator.linux.keychain;
 
-import org.cryptomator.linux.keychain.KDEWalletKeychainAccess;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
