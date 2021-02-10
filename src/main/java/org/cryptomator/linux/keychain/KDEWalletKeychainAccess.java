@@ -22,24 +22,7 @@ public class KDEWalletKeychainAccess implements KeychainAccessProvider {
 	private final Optional<ConnectedWallet> wallet;
 
 	public KDEWalletKeychainAccess() {
-		ConnectedWallet wallet = null;
-		try {
-			DBusConnection conn = null;
-			try {
-				conn = DBusConnection.getConnection(DBusConnection.DBusBusType.SESSION);
-			} catch (RuntimeException e) {
-				if (e.getMessage() == "Cannot Resolve Session Bus Address") {
-					LOG.warn("SESSION DBus not found.");
-				}
-			}
-			if (conn == null) {
-				conn = DBusConnection.getConnection(DBusConnection.DBusBusType.SYSTEM);
-			}
-			wallet = new ConnectedWallet(conn);
-		} catch (DBusException e) {
-			LOG.warn("Connecting to D-Bus failed.", e);
-		}
-		this.wallet = Optional.ofNullable(wallet);
+		this.wallet = ConnectedWallet.connect();
 	}
 
 	@Override
@@ -83,6 +66,25 @@ public class KDEWalletKeychainAccess implements KeychainAccessProvider {
 
 		public ConnectedWallet(DBusConnection connection) {
 			this.wallet = new KDEWallet(connection);
+		}
+
+		static Optional<ConnectedWallet> connect() {
+			DBusConnection conn = null;
+			try {
+				try {
+					conn = DBusConnection.getConnection(DBusConnection.DBusBusType.SESSION);
+				} catch (RuntimeException e) {
+					if (e.getMessage() == "Cannot Resolve Session Bus Address") {
+						LOG.warn("SESSION DBus not found.");
+					}
+				}
+				if (conn == null) {
+					conn = DBusConnection.getConnection(DBusConnection.DBusBusType.SYSTEM);
+				}
+			} catch (DBusException e) {
+				LOG.warn("Connecting to D-Bus failed.", e);
+			}
+			return Optional.ofNullable(new ConnectedWallet(conn));
 		}
 
 		public boolean isSupported() {
