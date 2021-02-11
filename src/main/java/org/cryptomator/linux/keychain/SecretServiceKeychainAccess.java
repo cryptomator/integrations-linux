@@ -76,8 +76,6 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 	}
 
 	private Map<String, String> createAttributes(String key) {
-		Map<String, String> attributes = new HashMap();
-		attributes.put("Vault", key);
-		return attributes;
+		return Map.of("Vault", key);
 	}
 }
