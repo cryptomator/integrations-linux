@@ -69,22 +69,25 @@ public class KDEWalletKeychainAccess implements KeychainAccessProvider {
 		}
 
 		static Optional<ConnectedWallet> connect() {
-			DBusConnection conn = null;
 			try {
-				try {
-					conn = DBusConnection.getConnection(DBusConnection.DBusBusType.SESSION);
-				} catch (RuntimeException e) {
-					if (e.getMessage() == "Cannot Resolve Session Bus Address") {
-						LOG.warn("SESSION DBus not found.");
-					}
-				}
-				if (conn == null) {
-					conn = DBusConnection.getConnection(DBusConnection.DBusBusType.SYSTEM);
-				}
-			} catch (DBusException e) {
+				return Optional.of(new ConnectedWallet(getConnection()));
+			} catch (RuntimeException | DBusException e) {
 				LOG.warn("Connecting to D-Bus failed.", e);
+				return Optional.empty();
 			}
-			return Optional.ofNullable(new ConnectedWallet(conn));
+		}
+
+		private static DBusConnection getConnection() throws RuntimeException, DBusException {
+			try {
+				return DBusConnection.getConnection(DBusConnection.DBusBusType.SESSION);
+			} catch (RuntimeException e) {
+				if (e.getMessage() == "Cannot Resolve Session Bus Address") {
+					LOG.warn("SESSION DBus not found, falling back to SYSTEM DBus");
+					return DBusConnection.getConnection(DBusConnection.DBusBusType.SYSTEM);
+				} else {
+					throw e;
+				}
+			}
 		}
 
 		public boolean isSupported() {
