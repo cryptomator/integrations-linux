@@ -48,6 +48,11 @@ public class KDEWalletKeychainAccess implements KeychainAccessProvider {
 	}
 
 	@Override
+	public boolean isLocked() {
+		return wallet.map(ConnectedWallet::isLocked).orElse(false);
+	}
+
+	@Override
 	public void storePassphrase(String key, CharSequence passphrase) throws KeychainAccessException {
 		Preconditions.checkState(wallet.isPresent(), "Keychain not supported.");
 		wallet.get().storePassphrase(key, passphrase);
@@ -83,6 +88,8 @@ public class KDEWalletKeychainAccess implements KeychainAccessProvider {
 		public boolean isSupported() {
 			return wallet.isEnabled();
 		}
+
+		public boolean isLocked() { return !wallet.isOpen(Static.DEFAULT_WALLET); }
 
 		public void storePassphrase(String key, CharSequence passphrase) throws KeychainAccessException {
 			try {
