@@ -20,6 +20,16 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 	}
 
 	@Override
+	public boolean isLocked() {
+		try (@SuppressWarnings("unused") SimpleCollection keyring = new SimpleCollection()) {
+			// seems like we're able to access the keyring.
+			return keyring.isLocked();
+		} catch (IOException | ExceptionInInitializerError | RuntimeException e) {
+			return true;
+		}
+	}
+
+	@Override
 	public void storePassphrase(String key, CharSequence passphrase) throws KeychainAccessException {
 		try (SimpleCollection keyring = new SimpleCollection()) {
 			List<String> list = keyring.getItems(createAttributes(key));
