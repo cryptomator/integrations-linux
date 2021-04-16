@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import org.cryptomator.integrations.keychain.KeychainAccessException;
 import org.cryptomator.integrations.keychain.KeychainAccessProvider;
 import org.freedesktop.dbus.connections.impl.DBusConnection;
+import org.freedesktop.dbus.exceptions.DBusConnectionException;
 import org.freedesktop.dbus.exceptions.DBusException;
 import org.kde.KWallet;
 import org.kde.Static;
@@ -71,20 +72,20 @@ public class KDEWalletKeychainAccess implements KeychainAccessProvider {
 		static Optional<ConnectedWallet> connect() {
 			try {
 				return Optional.of(new ConnectedWallet(getConnection()));
-			} catch (RuntimeException | DBusException e) {
+			} catch (DBusException e) {
 				LOG.warn("Connecting to D-Bus failed.", e);
 				return Optional.empty();
 			}
 		}
 
-		private static DBusConnection getConnection() throws RuntimeException, DBusException {
+		private static DBusConnection getConnection() throws DBusException {
 			try {
 				return DBusConnection.getConnection(DBusConnection.DBusBusType.SESSION);
-			} catch (RuntimeException e) {
-				if ("Cannot Resolve Session Bus Address".equals(e.getMessage())) {
-					LOG.warn("SESSION DBus not found, falling back to SYSTEM DBus");
+			} catch (DBusConnectionException ce) {
+				LOG.warn("SESSION DBus not found, falling back to SYSTEM DBus");
+				try {
 					return DBusConnection.getConnection(DBusConnection.DBusBusType.SYSTEM);
-				} else {
+				} catch (DBusException e) {
 					throw e;
 				}
 			}
