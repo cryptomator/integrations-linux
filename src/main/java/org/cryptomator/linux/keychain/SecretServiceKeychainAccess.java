@@ -24,7 +24,7 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 		try (@SuppressWarnings("unused") SimpleCollection keyring = new SimpleCollection()) {
 			// seems like we're able to access the keyring.
 			return keyring.isLocked();
-		} catch (IOException | ExceptionInInitializerError | RuntimeException e) {
+		} catch (IOException e) {
 			return true;
 		}
 	}
