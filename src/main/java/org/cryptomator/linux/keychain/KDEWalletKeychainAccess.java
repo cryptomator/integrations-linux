@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import org.cryptomator.integrations.keychain.KeychainAccessException;
 import org.cryptomator.integrations.keychain.KeychainAccessProvider;
 import org.freedesktop.dbus.connections.impl.DBusConnection;
+import org.freedesktop.dbus.exceptions.DBusConnectionException;
 import org.freedesktop.dbus.exceptions.DBusException;
 import org.kde.KWallet;
 import org.kde.Static;
@@ -22,24 +23,12 @@ public class KDEWalletKeychainAccess implements KeychainAccessProvider {
 	private final Optional<ConnectedWallet> wallet;
 
 	public KDEWalletKeychainAccess() {
-		ConnectedWallet wallet = null;
-		try {
-			DBusConnection conn = null;
-			try {
-				conn = DBusConnection.getConnection(DBusConnection.DBusBusType.SESSION);
-			} catch (RuntimeException e) {
-				if (e.getMessage() == "Cannot Resolve Session Bus Address") {
-					LOG.warn("SESSION DBus not found.");
-				}
-			}
-			if (conn == null) {
-				conn = DBusConnection.getConnection(DBusConnection.DBusBusType.SYSTEM);
-			}
-			wallet = new ConnectedWallet(conn);
-		} catch (DBusException e) {
-			LOG.warn("Connecting to D-Bus failed.", e);
-		}
-		this.wallet = Optional.ofNullable(wallet);
+		this.wallet = ConnectedWallet.connect();
+	}
+
+	@Override
+	public String displayName() {
+		return "KDE Wallet";
 	}
 
 	@Override
@@ -83,6 +72,28 @@ public class KDEWalletKeychainAccess implements KeychainAccessProvider {
 
 		public ConnectedWallet(DBusConnection connection) {
 			this.wallet = new KDEWallet(connection);
+		}
+
+		static Optional<ConnectedWallet> connect() {
+			try {
+				return Optional.of(new ConnectedWallet(getConnection()));
+			} catch (DBusException e) {
+				LOG.warn("Connecting to D-Bus failed.", e);
+				return Optional.empty();
+			}
+		}
+
+		private static DBusConnection getConnection() throws DBusException {
+			try {
+				return DBusConnection.getConnection(DBusConnection.DBusBusType.SESSION);
+			} catch (DBusConnectionException ce) {
+				LOG.warn("SESSION DBus not found, falling back to SYSTEM DBus");
+				try {
+					return DBusConnection.getConnection(DBusConnection.DBusBusType.SYSTEM);
+				} catch (DBusException e) {
+					throw e;
+				}
+			}
 		}
 
 		public boolean isSupported() {
