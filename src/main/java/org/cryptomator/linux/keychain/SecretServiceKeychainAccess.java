@@ -6,13 +6,17 @@ import org.freedesktop.secret.simple.SimpleCollection;
 
 import java.io.IOException;
 import java.security.AccessControlException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 
 	private final String LABEL_FOR_SECRET_IN_KEYRING = "Cryptomator";
+
+	@Override
+	public String displayName() {
+		return "Gnome Keyring";
+	}
 
 	@Override
 	public boolean isSupported() {

@@ -27,6 +27,11 @@ public class KDEWalletKeychainAccess implements KeychainAccessProvider {
 	}
 
 	@Override
+	public String displayName() {
+		return "KDE Wallet";
+	}
+
+	@Override
 	public boolean isSupported() {
 		return wallet.map(ConnectedWallet::isSupported).orElse(false);
 	}
