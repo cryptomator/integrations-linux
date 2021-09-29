@@ -76,20 +76,20 @@ public class KDEWalletKeychainAccess implements KeychainAccessProvider {
 
 		static Optional<ConnectedWallet> connect() {
 			try {
-				return Optional.of(new ConnectedWallet(getConnection()));
+				return Optional.of(new ConnectedWallet(getNewConnection()));
 			} catch (DBusException e) {
 				LOG.warn("Connecting to D-Bus failed.", e);
 				return Optional.empty();
 			}
 		}
 
-		private static DBusConnection getConnection() throws DBusException {
+		private static DBusConnection getNewConnection() throws DBusException {
 			try {
-				return DBusConnection.getConnection(DBusConnection.DBusBusType.SESSION);
+				return DBusConnection.newConnection(DBusConnection.DBusBusType.SESSION);
 			} catch (DBusConnectionException ce) {
 				LOG.warn("SESSION DBus not found, falling back to SYSTEM DBus");
 				try {
-					return DBusConnection.getConnection(DBusConnection.DBusBusType.SYSTEM);
+					return DBusConnection.newConnection(DBusConnection.DBusBusType.SYSTEM);
 				} catch (DBusException e) {
 					throw e;
 				}
