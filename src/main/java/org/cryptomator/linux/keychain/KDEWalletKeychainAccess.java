@@ -97,10 +97,22 @@ public class KDEWalletKeychainAccess implements KeychainAccessProvider {
 		}
 
 		public boolean isSupported() {
-			return wallet.isEnabled();
+			try {
+				return wallet.isEnabled();
+			} catch (RuntimeException e) {
+				LOG.warn("Failed to check if KDE Wallet is available.", e);
+				return false;
+			}
 		}
 
-		public boolean isLocked() { return !wallet.isOpen(Static.DEFAULT_WALLET); }
+		public boolean isLocked() {
+			try {
+				return !wallet.isOpen(Static.DEFAULT_WALLET);
+			} catch (RuntimeException e) {
+				LOG.warn("Failed to check whether KDE Wallet is open, therefore considering it closed.", e);
+				return true;
+			}
+		}
 
 		public void storePassphrase(String key, CharSequence passphrase) throws KeychainAccessException {
 			try {
