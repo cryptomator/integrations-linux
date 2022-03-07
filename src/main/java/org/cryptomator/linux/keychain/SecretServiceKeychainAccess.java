@@ -1,14 +1,17 @@
 package org.cryptomator.linux.keychain;
 
+import org.cryptomator.integrations.common.OperatingSystem;
+import org.cryptomator.integrations.common.Priority;
 import org.cryptomator.integrations.keychain.KeychainAccessException;
 import org.cryptomator.integrations.keychain.KeychainAccessProvider;
 import org.freedesktop.secret.simple.SimpleCollection;
 
 import java.io.IOException;
-import java.security.AccessControlException;
 import java.util.List;
 import java.util.Map;
 
+@Priority(900)
+@OperatingSystem(OperatingSystem.Value.LINUX)
 public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 
 	private final String LABEL_FOR_SECRET_IN_KEYRING = "Cryptomator";
@@ -33,7 +36,13 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 	}
 
 	@Override
+	@Deprecated
 	public void storePassphrase(String key, CharSequence passphrase) throws KeychainAccessException {
+		storePassphrase(key, null, passphrase);
+	}
+
+	@Override
+	public void storePassphrase(String key, String displayName, CharSequence passphrase) throws KeychainAccessException {
 		try (SimpleCollection keyring = new SimpleCollection()) {
 			List<String> list = keyring.getItems(createAttributes(key));
 			if (list == null || list.isEmpty()) {
@@ -41,7 +50,7 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 			} else {
 				changePassphrase(key, passphrase);
 			}
-		} catch (IOException | AccessControlException e) {
+		} catch (IOException | SecurityException e) {
 			throw new KeychainAccessException("Storing password failed.", e);
 		}
 	}
@@ -55,7 +64,7 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 			} else {
 				return null;
 			}
-		} catch (IOException | AccessControlException e) {
+		} catch (IOException | SecurityException e) {
 			throw new KeychainAccessException("Loading password failed.", e);
 		}
 	}
@@ -67,19 +76,25 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 			if (list != null && !list.isEmpty()) {
 				keyring.deleteItem(list.get(0));
 			}
-		} catch (IOException | AccessControlException e) {
+		} catch (IOException | SecurityException e) {
 			throw new KeychainAccessException("Deleting password failed.", e);
 		}
 	}
 
 	@Override
+	@Deprecated
 	public void changePassphrase(String key, CharSequence passphrase) throws KeychainAccessException {
+		changePassphrase(key, null, passphrase);
+	}
+
+	@Override
+	public void changePassphrase(String key, String displayName, CharSequence passphrase) throws KeychainAccessException {
 		try (SimpleCollection keyring = new SimpleCollection()) {
 			List<String> list = keyring.getItems(createAttributes(key));
 			if (list != null && !list.isEmpty()) {
 				keyring.updateItem(list.get(0), LABEL_FOR_SECRET_IN_KEYRING, passphrase, createAttributes(key));
 			}
-		} catch (IOException | AccessControlException e) {
+		} catch (IOException | SecurityException e) {
 			throw new KeychainAccessException("Changing password failed.", e);
 		}
 	}
