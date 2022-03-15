@@ -36,12 +36,13 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.jdk.version>17</project.jdk.version>
 
 		<!-- runtime dependencies -->
 		<api.version>1.1.0-beta2</api.version>
 		<secret-service.version>1.7.0</secret-service.version>
 		<kdewallet.version>1.2.6</kdewallet.version>
-		<guava.version>31.0.1-jre</guava.version>
+		<guava.version>31.1-jre</guava.version>
 		<slf4j.version>1.7.36</slf4j.version>
 
 		<!-- test dependencies -->
@@ -148,7 +149,7 @@
 				</executions>
 				<configuration>
 					<quiet>true</quiet>
-					<release>17</release>
+					<release>${project.jdk.version}</release>
 					<tags>
 						<!-- workaround for "unknown tag: implNote", see https://blog.codefx.org/java/new-javadoc-tags/#Maven  -->
 						<tag>
