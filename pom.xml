@@ -46,6 +46,10 @@
 
 		<!-- test dependencies -->
 		<junit.version>5.8.2</junit.version>
+
+		<!-- build plugin dependencies -->
+		<dependency-check.version>7.0.0</dependency-check.version>
+		<nexus-staging.version>1.6.8</nexus-staging.version>
 	</properties>
 
 	<dependencies>
@@ -191,6 +195,33 @@
 
 
 	<profiles>
+		<profile>
+			<id>dependency-check</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.owasp</groupId>
+						<artifactId>dependency-check-maven</artifactId>
+						<version>${dependency-check.version}</version>
+						<configuration>
+							<cveValidForHours>24</cveValidForHours>
+							<failBuildOnCVSS>0</failBuildOnCVSS>
+							<skipTestScope>true</skipTestScope>
+							<detail>true</detail>
+							<suppressionFile>suppression.xml</suppressionFile>
+						</configuration>
+						<executions>
+							<execution>
+								<goals>
+									<goal>check</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+
 		<profile>
 			<id>sign</id>
 			<build>
