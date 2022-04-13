@@ -36,19 +36,13 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 	}
 
 	@Override
-	@Deprecated
-	public void storePassphrase(String key, CharSequence passphrase) throws KeychainAccessException {
-		storePassphrase(key, null, passphrase);
-	}
-
-	@Override
 	public void storePassphrase(String key, String displayName, CharSequence passphrase) throws KeychainAccessException {
 		try (SimpleCollection keyring = new SimpleCollection()) {
 			List<String> list = keyring.getItems(createAttributes(key));
 			if (list == null || list.isEmpty()) {
 				keyring.createItem(LABEL_FOR_SECRET_IN_KEYRING, passphrase, createAttributes(key));
 			} else {
-				changePassphrase(key, passphrase);
+				changePassphrase(key, displayName, passphrase);
 			}
 		} catch (IOException | SecurityException e) {
 			throw new KeychainAccessException("Storing password failed.", e);
@@ -79,12 +73,6 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 		} catch (IOException | SecurityException e) {
 			throw new KeychainAccessException("Deleting password failed.", e);
 		}
-	}
-
-	@Override
-	@Deprecated
-	public void changePassphrase(String key, CharSequence passphrase) throws KeychainAccessException {
-		changePassphrase(key, null, passphrase);
 	}
 
 	@Override

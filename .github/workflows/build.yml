@@ -20,7 +20,7 @@ jobs:
           mvn versions:set --file ./pom.xml -DnewVersion=${GITHUB_REF##*/}
       - name: Build and Test
         id: buildAndTest
-        run: mvn -B clean install
+        run: mvn -B clean install -Pdependency-check
       - uses: actions/upload-artifact@v2
         with:
           name: artifacts

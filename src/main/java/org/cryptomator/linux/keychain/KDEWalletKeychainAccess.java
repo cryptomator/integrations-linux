@@ -46,12 +46,6 @@ public class KDEWalletKeychainAccess implements KeychainAccessProvider {
 	}
 
 	@Override
-	@Deprecated
-	public void storePassphrase(String key, CharSequence passphrase) throws KeychainAccessException {
-		storePassphrase(key, null, passphrase);
-	}
-
-	@Override
 	public void storePassphrase(String key, String displayName, CharSequence passphrase) throws KeychainAccessException {
 		Preconditions.checkState(wallet.isPresent(), "Keychain not supported.");
 		wallet.get().storePassphrase(key, passphrase);
@@ -67,12 +61,6 @@ public class KDEWalletKeychainAccess implements KeychainAccessProvider {
 	public void deletePassphrase(String key) throws KeychainAccessException {
 		Preconditions.checkState(wallet.isPresent(), "Keychain not supported.");
 		wallet.get().deletePassphrase(key);
-	}
-
-	@Override
-	@Deprecated
-	public void changePassphrase(String key, CharSequence passphrase) throws KeychainAccessException {
-		changePassphrase(key, null, passphrase);
 	}
 
 	@Override
