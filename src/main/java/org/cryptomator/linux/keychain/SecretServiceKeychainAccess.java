@@ -1,38 +1,50 @@
 package org.cryptomator.linux.keychain;
 
+import org.cryptomator.integrations.common.OperatingSystem;
+import org.cryptomator.integrations.common.Priority;
 import org.cryptomator.integrations.keychain.KeychainAccessException;
 import org.cryptomator.integrations.keychain.KeychainAccessProvider;
 import org.freedesktop.secret.simple.SimpleCollection;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Priority(900)
+@OperatingSystem(OperatingSystem.Value.LINUX)
 public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 
 	private final String LABEL_FOR_SECRET_IN_KEYRING = "Cryptomator";
 
 	@Override
+	public String displayName() {
+		return "Gnome Keyring";
+	}
+
+	@Override
 	public boolean isSupported() {
-		try (@SuppressWarnings("unused") SimpleCollection keyring = new SimpleCollection()) {
-			// seems like we're able to access the keyring.
+		return SimpleCollection.isAvailable();
+	}
+
+	@Override
+	public boolean isLocked() {
+		try (SimpleCollection keyring = new SimpleCollection()) {
+			return keyring.isLocked();
+		} catch (IOException e) {
 			return true;
-		} catch (IOException | RuntimeException e) {
-			return false;
 		}
 	}
 
 	@Override
-	public void storePassphrase(String key, CharSequence passphrase) throws KeychainAccessException {
+	public void storePassphrase(String key, String displayName, CharSequence passphrase) throws KeychainAccessException {
 		try (SimpleCollection keyring = new SimpleCollection()) {
 			List<String> list = keyring.getItems(createAttributes(key));
-			if (list == null) {
+			if (list == null || list.isEmpty()) {
 				keyring.createItem(LABEL_FOR_SECRET_IN_KEYRING, passphrase, createAttributes(key));
 			} else {
-				changePassphrase(key, passphrase);
+				changePassphrase(key, displayName, passphrase);
 			}
-		} catch (IOException e) {
+		} catch (IOException | SecurityException e) {
 			throw new KeychainAccessException("Storing password failed.", e);
 		}
 	}
@@ -41,12 +53,12 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 	public char[] loadPassphrase(String key) throws KeychainAccessException {
 		try (SimpleCollection keyring = new SimpleCollection()) {
 			List<String> list = keyring.getItems(createAttributes(key));
-			if (list != null) {
+			if (list != null && !list.isEmpty()) {
 				return keyring.getSecret(list.get(0));
 			} else {
 				return null;
 			}
-		} catch (IOException e) {
+		} catch (IOException | SecurityException e) {
 			throw new KeychainAccessException("Loading password failed.", e);
 		}
 	}
@@ -55,29 +67,28 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 	public void deletePassphrase(String key) throws KeychainAccessException {
 		try (SimpleCollection keyring = new SimpleCollection()) {
 			List<String> list = keyring.getItems(createAttributes(key));
-			if (list != null) {
+			if (list != null && !list.isEmpty()) {
 				keyring.deleteItem(list.get(0));
 			}
-		} catch (IOException e) {
+		} catch (IOException | SecurityException e) {
 			throw new KeychainAccessException("Deleting password failed.", e);
 		}
 	}
 
 	@Override
-	public void changePassphrase(String key, CharSequence passphrase) throws KeychainAccessException {
+	public void changePassphrase(String key, String displayName, CharSequence passphrase) throws KeychainAccessException {
 		try (SimpleCollection keyring = new SimpleCollection()) {
 			List<String> list = keyring.getItems(createAttributes(key));
-			if (list != null) {
+			if (list != null && !list.isEmpty()) {
 				keyring.updateItem(list.get(0), LABEL_FOR_SECRET_IN_KEYRING, passphrase, createAttributes(key));
 			}
-		} catch (IOException e) {
+		} catch (IOException | SecurityException e) {
 			throw new KeychainAccessException("Changing password failed.", e);
 		}
 	}
 
 	private Map<String, String> createAttributes(String key) {
-		Map<String, String> attributes = new HashMap();
-		attributes.put("Vault", key);
-		return attributes;
+		return Map.of("Vault", key);
 	}
+
 }

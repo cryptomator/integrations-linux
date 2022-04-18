@@ -1,9 +1,12 @@
 package org.cryptomator.linux.keychain;
 
 import com.google.common.base.Preconditions;
+import org.cryptomator.integrations.common.OperatingSystem;
+import org.cryptomator.integrations.common.Priority;
 import org.cryptomator.integrations.keychain.KeychainAccessException;
 import org.cryptomator.integrations.keychain.KeychainAccessProvider;
 import org.freedesktop.dbus.connections.impl.DBusConnection;
+import org.freedesktop.dbus.exceptions.DBusConnectionException;
 import org.freedesktop.dbus.exceptions.DBusException;
 import org.kde.KWallet;
 import org.kde.Static;
@@ -15,7 +18,9 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.Optional;
 
-public class KDEWalletKeychainAccess implements KeychainAccessProvider, PropertyChangeListener {
+@Priority(900)
+@OperatingSystem(OperatingSystem.Value.LINUX)
+public class KDEWalletKeychainAccess implements KeychainAccessProvider {
 
 	private static final Logger LOG = LoggerFactory.getLogger(KDEWalletKeychainAccess.class);
 	private static final String FOLDER_NAME = "Cryptomator";
@@ -24,15 +29,12 @@ public class KDEWalletKeychainAccess implements KeychainAccessProvider, Property
 	private final Optional<ConnectedWallet> wallet;
 
 	public KDEWalletKeychainAccess() {
-		ConnectedWallet wallet = null;
-		try {
-			DBusConnection conn = DBusConnection.getConnection(DBusConnection.DBusBusType.SESSION);
-			wallet = new ConnectedWallet(conn);
-			wallet.wallet.getSignalHandler().addPropertyChangeListener(this);
-		} catch (DBusException e) {
-			LOG.warn("Connecting to D-Bus failed.", e);
-		}
-		this.wallet = Optional.ofNullable(wallet);
+		this.wallet = ConnectedWallet.connect();
+	}
+
+	@Override
+	public String displayName() {
+		return "KDE Wallet";
 	}
 
 	@Override
@@ -41,7 +43,12 @@ public class KDEWalletKeychainAccess implements KeychainAccessProvider, Property
 	}
 
 	@Override
-	public void storePassphrase(String key, CharSequence passphrase) throws KeychainAccessException {
+	public boolean isLocked() {
+		return wallet.map(ConnectedWallet::isLocked).orElse(false);
+	}
+
+	@Override
+	public void storePassphrase(String key, String displayName, CharSequence passphrase) throws KeychainAccessException {
 		Preconditions.checkState(wallet.isPresent(), "Keychain not supported.");
 		wallet.get().storePassphrase(key, passphrase);
 	}
@@ -59,33 +66,70 @@ public class KDEWalletKeychainAccess implements KeychainAccessProvider, Property
 	}
 
 	@Override
-	public void changePassphrase(String key, CharSequence passphrase) throws KeychainAccessException {
+	public void changePassphrase(String key, String displayName, CharSequence passphrase) throws KeychainAccessException {
 		Preconditions.checkState(wallet.isPresent(), "Keychain not supported.");
 		wallet.get().changePassphrase(key, passphrase);
 	}
 
-	@Override
-	public void propertyChange(PropertyChangeEvent event) {
-		if (event.getPropertyName().equals("KWallet.walletAsyncOpened")) {
-			Preconditions.checkState(wallet.isPresent(), "Keychain not supported.");
-			wallet.get().handle = (int) event.getNewValue();
-			if (wallet.get().handle != -1) {
-				LOG.info("Wallet successfully opened.");
-			}
-		}
-	}
-
-	private static class ConnectedWallet {
+	private static class ConnectedWallet implements PropertyChangeListener {
 
 		private final KDEWallet wallet;
 		private int handle = -1;
 
 		public ConnectedWallet(DBusConnection connection) {
 			this.wallet = new KDEWallet(connection);
+			this.wallet.getSignalHandler().addPropertyChangeListener(this);
+		}
+
+		@Override
+		public void propertyChange(PropertyChangeEvent event) {
+			if (event.getPropertyName().equals("KWallet.walletAsyncOpened")
+				&& event.getNewValue() instanceof Integer i) {
+				handle = i;
+				if (handle != -1) {
+					LOG.info("Wallet successfully opened.");
+				}
+			}
+		}
+
+		static Optional<ConnectedWallet> connect() {
+			try {
+				return Optional.of(new ConnectedWallet(getNewConnection()));
+			} catch (DBusException e) {
+				LOG.warn("Connecting to D-Bus failed.", e);
+				return Optional.empty();
+			}
+		}
+
+		private static DBusConnection getNewConnection() throws DBusException {
+			try {
+				return DBusConnection.newConnection(DBusConnection.DBusBusType.SESSION);
+			} catch (DBusConnectionException ce) {
+				LOG.warn("SESSION DBus not found, falling back to SYSTEM DBus");
+				try {
+					return DBusConnection.newConnection(DBusConnection.DBusBusType.SYSTEM);
+				} catch (DBusException e) {
+					throw e;
+				}
+			}
 		}
 
 		public boolean isSupported() {
-			return wallet.isEnabled();
+			try {
+				return wallet.isEnabled();
+			} catch (RuntimeException e) {
+				LOG.warn("Failed to check if KDE Wallet is available.", e);
+				return false;
+			}
+		}
+
+		public boolean isLocked() {
+			try {
+				return !wallet.isOpen(Static.DEFAULT_WALLET);
+			} catch (RuntimeException e) {
+				LOG.warn("Failed to check whether KDE Wallet is open, therefore considering it closed.", e);
+				return true;
+			}
 		}
 
 		public void storePassphrase(String key, CharSequence passphrase) throws KeychainAccessException {
