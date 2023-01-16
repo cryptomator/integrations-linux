@@ -59,7 +59,7 @@ public class DBusFileMangerRevealPath implements RevealPathService {
 			var existsDbusSend = builderExistsDbusSend.start();
 			var existsNautilus = builderExistsNautilus.start();
 			var existsDolphin = builderExistsDolphin.start();
-			if (existsDbusSend.waitFor(5000, TimeUnit.MILLISECONDS) && existsDolphin.waitFor(5000, TimeUnit.MILLISECONDS) && existsDolphin.waitFor(5000, TimeUnit.MILLISECONDS)) {
+			if (existsDbusSend.waitFor(TIMEOUT_THRESHOLD, TimeUnit.MILLISECONDS) && !existsDolphin.isAlive() && !existsNautilus.isAlive()) {
 				return existsDbusSend.exitValue() == 0 && (existsNautilus.exitValue() == 0 | existsDolphin.exitValue() == 0);
 			}
 		} catch (IOException | InterruptedException e) {
