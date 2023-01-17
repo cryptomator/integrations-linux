@@ -39,7 +39,8 @@
 		<project.jdk.version>17</project.jdk.version>
 
 		<!-- runtime dependencies -->
-		<api.version>1.1.0</api.version>
+
+		<api.version>1.2.0-beta4</api.version>
 		<secret-service.version>1.8.0-jdk17</secret-service.version>
 		<kdewallet.version>1.2.7</kdewallet.version>
 		<guava.version>31.1-jre</guava.version>
