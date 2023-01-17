@@ -11,6 +11,7 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Arrays;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -52,14 +53,18 @@ public class DBusFileMangerRevealPath implements RevealPathService {
 
 	@Override
 	public boolean isSupported() {
+		CountDownLatch waitBarrier = new CountDownLatch(3);
 		ProcessBuilder builderExistsDbusSend = new ProcessBuilder().command("which", "dbus-send");
 		ProcessBuilder builderExistsNautilus = new ProcessBuilder().command("which", "nautilus");
 		ProcessBuilder builderExistsDolphin = new ProcessBuilder().command("which", "dolphin");
 		try {
 			var existsDbusSend = builderExistsDbusSend.start();
+			existsDbusSend.onExit().thenRun(waitBarrier::countDown);
 			var existsNautilus = builderExistsNautilus.start();
+			existsNautilus.onExit().thenRun(waitBarrier::countDown);
 			var existsDolphin = builderExistsDolphin.start();
-			if (existsDbusSend.waitFor(TIMEOUT_THRESHOLD, TimeUnit.MILLISECONDS) && !existsDolphin.isAlive() && !existsNautilus.isAlive()) {
+			existsDolphin.onExit().thenRun(waitBarrier::countDown);
+			if (waitBarrier.await(TIMEOUT_THRESHOLD, TimeUnit.MILLISECONDS)) {
 				return existsDbusSend.exitValue() == 0 && (existsNautilus.exitValue() == 0 | existsDolphin.exitValue() == 0);
 			}
 		} catch (IOException | InterruptedException e) {
