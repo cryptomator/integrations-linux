@@ -6,6 +6,7 @@ import org.cryptomator.integrations.common.Priority;
 import org.cryptomator.integrations.keychain.KeychainAccessException;
 import org.cryptomator.integrations.keychain.KeychainAccessProvider;
 import org.freedesktop.dbus.connections.impl.DBusConnection;
+import org.freedesktop.dbus.connections.impl.DBusConnectionBuilder;
 import org.freedesktop.dbus.exceptions.DBusConnectionException;
 import org.freedesktop.dbus.exceptions.DBusException;
 import org.kde.KWallet;
@@ -89,11 +90,11 @@ public class KDEWalletKeychainAccess implements KeychainAccessProvider {
 
 		private static DBusConnection getNewConnection() throws DBusException {
 			try {
-				return DBusConnection.newConnection(DBusConnection.DBusBusType.SESSION);
+				return DBusConnectionBuilder.forSessionBus().withShared(false).build();
 			} catch (DBusConnectionException ce) {
 				LOG.warn("SESSION DBus not found, falling back to SYSTEM DBus");
 				try {
-					return DBusConnection.newConnection(DBusConnection.DBusBusType.SYSTEM);
+					return DBusConnectionBuilder.forSystemBus().build();
 				} catch (DBusException e) {
 					throw e;
 				}

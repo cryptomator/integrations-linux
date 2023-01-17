@@ -39,9 +39,10 @@
 		<project.jdk.version>19</project.jdk.version>
 
 		<!-- runtime dependencies -->
+
 		<api.version>1.2.0-beta4</api.version>
-		<secret-service.version>1.7.0</secret-service.version>
-		<kdewallet.version>1.2.6</kdewallet.version>
+		<secret-service.version>1.8.1-jdk17</secret-service.version>
+		<kdewallet.version>1.2.8</kdewallet.version>
 		<guava.version>31.1-jre</guava.version>
 		<slf4j.version>1.7.36</slf4j.version>
 
@@ -94,7 +95,7 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.9.0</version>
 				<configuration>
-					<release>17</release>
+					<release>19</release>
 				</configuration>
 			</plugin>
 			<plugin>
