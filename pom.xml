@@ -95,7 +95,7 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.9.0</version>
 				<configuration>
-					<release>19</release>
+					<release>${project.jdk.version}</release>
 				</configuration>
 			</plugin>
 			<plugin>
