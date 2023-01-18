@@ -19,7 +19,7 @@ public class DBusFileMangerRevealPath implements RevealPathService {
 
 	private static final String FOR_FOLDERS = "org.freedesktop.FileManager1.ShowFolders";
 	private static final String FOR_FILES = "org.freedesktop.FileManager1.ShowItems";
-	private static final int TIMEOUT_THRESHOLD=5000;
+	private static final int TIMEOUT_THRESHOLD = 5000;
 
 	@Override
 	public void reveal(Path path) throws RevealFailedException {
@@ -28,7 +28,7 @@ public class DBusFileMangerRevealPath implements RevealPathService {
 			var uriPath = Arrays.stream(path.toUri().getPath().split("/")).map(s -> URLEncoder.encode(s, StandardCharsets.UTF_8).replace("+", "%20")).collect(Collectors.joining("/"));
 			ProcessBuilder pb = new ProcessBuilder().command("dbus-send",
 					"--print-reply",
-					"--reply-timeout="+TIMEOUT_THRESHOLD,
+					"--reply-timeout=" + TIMEOUT_THRESHOLD,
 					"--dest=org.freedesktop.FileManager1",
 					"--type=method_call",
 					"/org/freedesktop/FileManager1",
@@ -37,10 +37,13 @@ public class DBusFileMangerRevealPath implements RevealPathService {
 					"string:\"\""
 			);
 			var process = pb.start();
-			if (process.waitFor(TIMEOUT_THRESHOLD, TimeUnit.MILLISECONDS)) {
-				int exitValue = process.exitValue();
-				if (exitValue != 0) {
-					throw new RevealFailedException("dbus-send returned with code" + exitValue);
+			try (var reader = process.errorReader()) {
+				if (process.waitFor(TIMEOUT_THRESHOLD, TimeUnit.MILLISECONDS)) {
+					int exitValue = process.exitValue();
+					if (process.exitValue() != 0) {
+						String error = reader.lines().collect(Collectors.joining());
+						throw new RevealFailedException("dbus-send exited with code " + exitValue + " and error message: " + error);
+					}
 				}
 			}
 		} catch (IOException e) {
