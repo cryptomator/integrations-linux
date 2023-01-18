@@ -9,6 +9,7 @@ import org.freedesktop.dbus.connections.impl.DBusConnection;
 import org.freedesktop.dbus.connections.impl.DBusConnectionBuilder;
 import org.freedesktop.dbus.exceptions.DBusConnectionException;
 import org.freedesktop.dbus.exceptions.DBusException;
+import org.freedesktop.dbus.exceptions.DBusExecutionException;
 import org.kde.KWallet;
 import org.kde.Static;
 import org.purejava.KDEWallet;
@@ -28,7 +29,13 @@ public class KDEWalletKeychainAccess implements KeychainAccessProvider {
 	private final Optional<ConnectedWallet> wallet;
 
 	public KDEWalletKeychainAccess() {
-		this.wallet = ConnectedWallet.connect();
+		Optional<ConnectedWallet> tmp;
+		try { //TODO: remove try-catch once KDEWallet lib is fixed
+			tmp = ConnectedWallet.connect();
+		} catch (DBusExecutionException e) {
+			tmp = Optional.empty();
+		}
+		wallet = tmp;
 	}
 
 	@Override
