@@ -29,13 +29,7 @@ public class KDEWalletKeychainAccess implements KeychainAccessProvider {
 	private final Optional<ConnectedWallet> wallet;
 
 	public KDEWalletKeychainAccess() {
-		Optional<ConnectedWallet> tmp;
-		try { //TODO: remove try-catch once KDEWallet lib is fixed
-			tmp = ConnectedWallet.connect();
-		} catch (DBusExecutionException e) {
-			tmp = Optional.empty();
-		}
-		wallet = tmp;
+		this.wallet = ConnectedWallet.connect();
 	}
 
 	@Override
@@ -98,8 +92,9 @@ public class KDEWalletKeychainAccess implements KeychainAccessProvider {
 		private static DBusConnection getNewConnection() throws DBusException {
 			try {
 				return DBusConnectionBuilder.forSessionBus().withShared(false).build();
-			} catch (DBusConnectionException ce) {
-				LOG.warn("SESSION DBus not found, falling back to SYSTEM DBus");
+			} catch (DBusConnectionException | DBusExecutionException de) {
+				LOG.warn("Connecting to SESSION bus failed.", de);
+				LOG.warn("Falling back to SYSTEM DBus");
 				try {
 					return DBusConnectionBuilder.forSystemBus().build();
 				} catch (DBusException e) {
