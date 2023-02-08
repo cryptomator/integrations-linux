@@ -1,4 +1,4 @@
-package org.cryptomator.linux.keychain;
+package org.cryptomator.linux.revealpath;
 
 import org.cryptomator.integrations.revealpath.RevealFailedException;
 import org.cryptomator.linux.revealpath.DBusFileMangerRevealPath;
