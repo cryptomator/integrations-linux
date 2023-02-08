@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 public class DBusFileMangerRevealPath implements RevealPathService {
 
-	private static final String[] FILEMANAGER_OBJECT_PATHS = {"/org/gnome/Nautilus", "/org/kde/dolphin", "/xfce/Thunar"};
+	private static final String[] FILEMANAGER_OBJECT_PATHS = {"/org/gnome/Nautilus", "/org/kde/dolphin", "/org/xfce/Thunar"};
 	private static final String FOR_FOLDERS = "org.freedesktop.FileManager1.ShowFolders";
 	private static final String FOR_FILES = "org.freedesktop.FileManager1.ShowItems";
 	private static final int TIMEOUT_THRESHOLD = 5000;
