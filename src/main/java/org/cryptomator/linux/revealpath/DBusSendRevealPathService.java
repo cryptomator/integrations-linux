@@ -17,7 +17,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class DBusFileMangerRevealPath implements RevealPathService {
+public class DBusSendRevealPathService implements RevealPathService {
 
 	private static final String[] FILEMANAGER_OBJECT_PATHS = {"/org/gnome/Nautilus", "/org/kde/dolphin", "/org/xfce/Thunar"};
 	private static final String FOR_FOLDERS = "org.freedesktop.FileManager1.ShowFolders";
@@ -62,7 +62,7 @@ public class DBusFileMangerRevealPath implements RevealPathService {
 		CountDownLatch waitBarrier = new CountDownLatch(FILEMANAGER_OBJECT_PATHS.length + 1);
 		ProcessBuilder dbusSendExistBuilder = new ProcessBuilder().command("test", " `command -v dbus-send`");
 		List<ProcessBuilder> fileManagerExistBuilders = Arrays.stream(FILEMANAGER_OBJECT_PATHS)
-				.map(DBusFileMangerRevealPath::createDbusObjectCheck).toList();
+				.map(DBusSendRevealPathService::createDbusObjectCheck).toList();
 
 		try {
 			var existsDbusSend = dbusSendExistBuilder.start();
