@@ -1,7 +1,6 @@
-package org.cryptomator.linux.keychain;
+package org.cryptomator.linux.revealpath;
 
 import org.cryptomator.integrations.revealpath.RevealFailedException;
-import org.cryptomator.linux.revealpath.DBusFileMangerRevealPath;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Disabled;
@@ -14,10 +13,10 @@ import java.nio.file.Path;
 
 @EnabledOnOs(OS.LINUX)
 @Disabled
-public class DbusFileManagerRevealPathTest {
+public class DBusSendRevealPathServiceTest {
 
 	@TempDir Path tmpDir;
-	DBusFileMangerRevealPath inTest = new DBusFileMangerRevealPath();
+	DBusSendRevealPathService inTest = new DBusSendRevealPathService();
 
 	@Test
 	public void testIsSupported() {
@@ -26,7 +25,7 @@ public class DbusFileManagerRevealPathTest {
 
 	@Test
 	public void testRevealSuccess() {
-		DBusFileMangerRevealPath revealPathService = new DBusFileMangerRevealPath();
+		DBusSendRevealPathService revealPathService = new DBusSendRevealPathService();
 		Assumptions.assumeTrue(revealPathService.isSupported());
 
 		Assertions.assertDoesNotThrow(() -> revealPathService.reveal(tmpDir));
@@ -34,7 +33,7 @@ public class DbusFileManagerRevealPathTest {
 
 	@Test
 	public void testRevealFail() {
-		DBusFileMangerRevealPath revealPathService = new DBusFileMangerRevealPath();
+		DBusSendRevealPathService revealPathService = new DBusSendRevealPathService();
 		Assumptions.assumeTrue(revealPathService.isSupported());
 
 		Assertions.assertThrows(RevealFailedException.class, () -> revealPathService.reveal(tmpDir.resolve("foobar")));
