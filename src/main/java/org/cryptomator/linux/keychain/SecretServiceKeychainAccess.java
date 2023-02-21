@@ -4,6 +4,8 @@ import org.cryptomator.integrations.common.OperatingSystem;
 import org.cryptomator.integrations.common.Priority;
 import org.cryptomator.integrations.keychain.KeychainAccessException;
 import org.cryptomator.integrations.keychain.KeychainAccessProvider;
+import org.freedesktop.dbus.exceptions.DBusConnectionException;
+import org.freedesktop.dbus.exceptions.DBusExecutionException;
 import org.freedesktop.secret.simple.SimpleCollection;
 
 import java.io.IOException;
@@ -23,7 +25,16 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 
 	@Override
 	public boolean isSupported() {
-		return SimpleCollection.isAvailable();
+		try {
+			return SimpleCollection.isAvailable();
+		} catch (ExceptionInInitializerError e) {
+			//TODO: remove try-catch once secret-service lib is fixed
+			if(e.getException() instanceof DBusExecutionException) {
+				return false;
+			} else {
+				throw e;
+			}
+		}
 	}
 
 	@Override
