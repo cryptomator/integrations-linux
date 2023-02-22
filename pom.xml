@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.cryptomator</groupId>
 	<artifactId>integrations-linux</artifactId>
-	<version>1.2.0</version>
+	<version>1.2.1</version>
 
 	<name>integrations-linux</name>
 	<description>Provides optional Linux services used by Cryptomator</description>
@@ -40,7 +40,7 @@
 
 		<!-- runtime dependencies -->
 
-		<api.version>1.2.0-beta4</api.version>
+		<api.version>1.2.0</api.version>
 		<secret-service.version>1.8.1-jdk17</secret-service.version>
 		<kdewallet.version>1.2.8</kdewallet.version>
 		<guava.version>31.1-jre</guava.version>
@@ -50,7 +50,7 @@
 		<junit.version>5.8.2</junit.version>
 
 		<!-- build plugin dependencies -->
-		<dependency-check.version>7.0.0</dependency-check.version>
+		<dependency-check.version>8.1.0</dependency-check.version>
 		<nexus-staging.version>1.6.8</nexus-staging.version>
 	</properties>
 
@@ -286,6 +286,15 @@
 					<url>https://maven.pkg.github.com/cryptomator/integrations-linux</url>
 				</repository>
 			</distributionManagement>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-deploy-plugin</artifactId>
+						<version>3.1.0</version>
+					</plugin>
+				</plugins>
+			</build>
 		</profile>
 	</profiles>
 </project>
