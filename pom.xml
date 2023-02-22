@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.cryptomator</groupId>
 	<artifactId>integrations-linux</artifactId>
-	<version>1.3.0-SNAPSHOT</version>
+	<version>1.2.1</version>
 
 	<name>integrations-linux</name>
 	<description>Provides optional Linux services used by Cryptomator</description>
