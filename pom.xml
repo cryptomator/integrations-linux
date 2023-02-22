@@ -40,7 +40,7 @@
 
 		<!-- runtime dependencies -->
 
-		<api.version>1.2.0-beta4</api.version>
+		<api.version>1.2.0</api.version>
 		<secret-service.version>1.8.1-jdk17</secret-service.version>
 		<kdewallet.version>1.2.8</kdewallet.version>
 		<guava.version>31.1-jre</guava.version>
