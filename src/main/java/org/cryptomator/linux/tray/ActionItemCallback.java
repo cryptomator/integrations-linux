@@ -1,7 +1,7 @@
-package org.cryptomator.ui.traymenu;
+package org.cryptomator.linux.tray;
 
 import org.cryptomator.integrations.tray.ActionItem;
-import org.purejava.linux.GCallback;
+import org.purejava.appindicator.GCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

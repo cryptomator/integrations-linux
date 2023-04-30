@@ -1,4 +1,4 @@
-package org.cryptomator.ui.traymenu;
+package org.cryptomator.linux.tray;
 
 import org.apache.commons.lang3.SystemUtils;
 import org.cryptomator.integrations.common.CheckAvailability;
@@ -8,7 +8,7 @@ import org.cryptomator.integrations.tray.SubMenuItem;
 import org.cryptomator.integrations.tray.TrayMenuController;
 import org.cryptomator.integrations.tray.TrayMenuException;
 import org.cryptomator.integrations.tray.TrayMenuItem;
-import org.purejava.linux.MemoryAllocator;
+import org.purejava.appindicator.MemoryAllocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +20,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.util.List;
 
-import static org.purejava.linux.app_indicator_h.*;
+import static org.purejava.appindicator.app_indicator_h.*;
 
 @CheckAvailability
 public class AppindicatorTrayMenuController implements TrayMenuController {
