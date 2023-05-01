@@ -12,7 +12,7 @@ module org.cryptomator.integrations.linux {
 	requires org.apache.commons.lang3;
 	requires org.freedesktop.dbus;
 	requires org.purejava.appindicator;
-	requires kdewallet;
+	requires org.purejava.kwallet;
 	requires secret.service;
 
 	provides KeychainAccessProvider with SecretServiceKeychainAccess;
