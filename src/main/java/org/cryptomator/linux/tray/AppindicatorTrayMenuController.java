@@ -1,10 +1,12 @@
 package org.cryptomator.linux.tray;
 
-import org.apache.commons.lang3.SystemUtils;
 import org.cryptomator.integrations.common.CheckAvailability;
+import org.cryptomator.integrations.common.OperatingSystem;
+import org.cryptomator.integrations.common.Priority;
 import org.cryptomator.integrations.tray.ActionItem;
 import org.cryptomator.integrations.tray.SeparatorItem;
 import org.cryptomator.integrations.tray.SubMenuItem;
+import org.cryptomator.integrations.tray.TrayIconLoader;
 import org.cryptomator.integrations.tray.TrayMenuController;
 import org.cryptomator.integrations.tray.TrayMenuException;
 import org.cryptomator.integrations.tray.TrayMenuItem;
@@ -13,27 +15,29 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
-import java.lang.foreign.SegmentScope;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.function.Consumer;
 
 import static org.purejava.appindicator.app_indicator_h.*;
 
-@CheckAvailability
+@Priority(1000)
+@OperatingSystem(OperatingSystem.Value.LINUX)
 public class AppindicatorTrayMenuController implements TrayMenuController {
 
 	private static final Logger LOG = LoggerFactory.getLogger(AppindicatorTrayMenuController.class);
 
-	private final SegmentScope scope = SegmentScope.auto();
+	private static final Arena ARENA = Arena.openShared();
 	private MemorySegment indicator;
 	private MemorySegment menu = gtk_menu_new();
 
 	@CheckAvailability
 	public static boolean isAvailable() {
-		return SystemUtils.IS_OS_LINUX && MemoryAllocator.isLoadedNativeLib();
+		return MemoryAllocator.isLoadedNativeLib();
 	}
 
 	@Override
@@ -47,8 +51,13 @@ public class AppindicatorTrayMenuController implements TrayMenuController {
 	}
 
 	@Override
-	public void updateTrayIcon(URI uri) {
-		app_indicator_set_icon(indicator, MemoryAllocator.ALLOCATE_FOR(getAbsolutePath(getPathString(uri))));
+	public void updateTrayIcon(Consumer<TrayIconLoader> iconLoader) {
+		TrayIconLoader.FreedesktopIconName callback = this::updateTrayIconCallback;
+		iconLoader.load(callback);
+	}
+
+	private void updateTrayIconCallback(String s) {
+		app_indicator_set_icon(indicator, MemoryAllocator.ALLOCATE_FOR(s));
 	}
 
 	@Override
@@ -66,30 +75,34 @@ public class AppindicatorTrayMenuController implements TrayMenuController {
 
 	private void addChildren(MemorySegment menu, List<TrayMenuItem> items) {
 		for (var item : items) {
-			// TODO: use Pattern Matching for switch, once available
-			if (item instanceof ActionItem a) {
-				var gtkMenuItem = gtk_menu_item_new();
-				gtk_menu_item_set_label(gtkMenuItem, MemoryAllocator.ALLOCATE_FOR(a.title()));
-				g_signal_connect_object(gtkMenuItem,
-						MemoryAllocator.ALLOCATE_FOR("activate"),
-						MemoryAllocator.ALLOCATE_CALLBACK_FOR(new ActionItemCallback(a), scope),
-						menu,
-						0);
-				gtk_menu_shell_append(menu, gtkMenuItem);
-			} else if (item instanceof SeparatorItem) {
-				var gtkSeparator = gtk_menu_item_new();
-				gtk_menu_shell_append(menu, gtkSeparator);
-			} else if (item instanceof SubMenuItem s) {
-				var gtkMenuItem = gtk_menu_item_new();
-				var gtkSubmenu = gtk_menu_new();
-				gtk_menu_item_set_label(gtkMenuItem, MemoryAllocator.ALLOCATE_FOR(s.title()));
-				addChildren(gtkSubmenu, s.items());
-				gtk_menu_item_set_submenu(gtkMenuItem, gtkSubmenu);
-				gtk_menu_shell_append(menu, gtkMenuItem);
+			switch (item) {
+				case ActionItem a -> {
+					var gtkMenuItem = gtk_menu_item_new();
+					gtk_menu_item_set_label(gtkMenuItem, MemoryAllocator.ALLOCATE_FOR(a.title()));
+					g_signal_connect_object(gtkMenuItem,
+							MemoryAllocator.ALLOCATE_FOR("activate"),
+							MemoryAllocator.ALLOCATE_CALLBACK_FOR(new ActionItemCallback(a), ARENA.scope()),
+							menu,
+							0);
+					gtk_menu_shell_append(menu, gtkMenuItem);
+				}
+				case SeparatorItem separatorItem -> {
+					var gtkSeparator = gtk_menu_item_new();
+					gtk_menu_shell_append(menu, gtkSeparator);
+				}
+				case SubMenuItem s -> {
+					var gtkMenuItem = gtk_menu_item_new();
+					var gtkSubmenu = gtk_menu_new();
+					gtk_menu_item_set_label(gtkMenuItem, MemoryAllocator.ALLOCATE_FOR(s.title()));
+					addChildren(gtkSubmenu, s.items());
+					gtk_menu_item_set_submenu(gtkMenuItem, gtkSubmenu);
+					gtk_menu_shell_append(menu, gtkMenuItem);
+				}
 			}
 			gtk_widget_show_all(menu);
 		}
 	}
+
 	private String getAbsolutePath(String iconName) {
 		var res = getClass().getClassLoader().getResource(iconName);
 		if (null == res) {

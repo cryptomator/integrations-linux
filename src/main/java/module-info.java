@@ -19,5 +19,5 @@ module org.cryptomator.integrations.linux {
 	provides RevealPathService with DBusSendRevealPathService;
 	provides TrayMenuController with AppindicatorTrayMenuController;
 
-	exports org.cryptomator.linux.tray;
+	opens org.cryptomator.linux.tray to org.cryptomator.integrations.api;
 }
