@@ -15,8 +15,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
+import java.lang.foreign.SegmentScope;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
@@ -31,7 +31,7 @@ public class AppindicatorTrayMenuController implements TrayMenuController {
 
 	private static final Logger LOG = LoggerFactory.getLogger(AppindicatorTrayMenuController.class);
 
-	private static final Arena ARENA = Arena.openShared();
+	private static final SegmentScope SCOPE = SegmentScope.global();
 	private MemorySegment indicator;
 	private MemorySegment menu = gtk_menu_new();
 
@@ -81,7 +81,7 @@ public class AppindicatorTrayMenuController implements TrayMenuController {
 					gtk_menu_item_set_label(gtkMenuItem, MemoryAllocator.ALLOCATE_FOR(a.title()));
 					g_signal_connect_object(gtkMenuItem,
 							MemoryAllocator.ALLOCATE_FOR("activate"),
-							MemoryAllocator.ALLOCATE_CALLBACK_FOR(new ActionItemCallback(a), ARENA.scope()),
+							MemoryAllocator.ALLOCATE_CALLBACK_FOR(new ActionItemCallback(a), SCOPE),
 							menu,
 							0);
 					gtk_menu_shell_append(menu, gtkMenuItem);
