@@ -10,7 +10,7 @@ record ActionItemCallback (ActionItem actionItem) implements GCallback {
 
 	@Override
 	public void apply() {
-		LOG.debug("Hit tray menu action '{}'", actionItem.title());
+		LOG.trace("Hit tray menu action '{}'", actionItem.title());
 		actionItem.action().run();
 	}
 }

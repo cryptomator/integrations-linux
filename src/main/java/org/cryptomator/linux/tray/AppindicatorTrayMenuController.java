@@ -14,12 +14,8 @@ import org.purejava.appindicator.MemoryAllocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentScope;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -41,22 +37,27 @@ public class AppindicatorTrayMenuController implements TrayMenuController {
 	}
 
 	@Override
-	public void showTrayIcon(URI uri, Runnable runnable, String s) throws TrayMenuException {
-		indicator = app_indicator_new(MemoryAllocator.ALLOCATE_FOR("org.cryptomator.Cryptomator"),
-				MemoryAllocator.ALLOCATE_FOR(getAbsolutePath(getPathString(uri))),
-				APP_INDICATOR_CATEGORY_APPLICATION_STATUS());
+	public void showTrayIcon(Consumer<TrayIconLoader> iconLoader, Runnable runnable, String s) throws TrayMenuException {
+		TrayIconLoader.FreedesktopIconName callback = this::showTrayIconWithSVG;
+		iconLoader.accept(callback);
 		gtk_widget_show_all(menu);
 		app_indicator_set_menu(indicator, menu);
 		app_indicator_set_status(indicator, APP_INDICATOR_STATUS_ACTIVE());
 	}
 
-	@Override
-	public void updateTrayIcon(Consumer<TrayIconLoader> iconLoader) {
-		TrayIconLoader.FreedesktopIconName callback = this::updateTrayIconCallback;
-		iconLoader.load(callback);
+	private void showTrayIconWithSVG(String s) {
+		indicator = app_indicator_new(MemoryAllocator.ALLOCATE_FOR("org.cryptomator.Cryptomator"),
+				MemoryAllocator.ALLOCATE_FOR(s),
+				APP_INDICATOR_CATEGORY_APPLICATION_STATUS());
 	}
 
-	private void updateTrayIconCallback(String s) {
+	@Override
+	public void updateTrayIcon(Consumer<TrayIconLoader> iconLoader) {
+		TrayIconLoader.FreedesktopIconName callback = this::updateTrayIconWithSVG;
+		iconLoader.accept(callback);
+	}
+
+	private void updateTrayIconWithSVG(String s) {
 		app_indicator_set_icon(indicator, MemoryAllocator.ALLOCATE_FOR(s));
 	}
 
@@ -101,23 +102,5 @@ public class AppindicatorTrayMenuController implements TrayMenuController {
 			}
 			gtk_widget_show_all(menu);
 		}
-	}
-
-	private String getAbsolutePath(String iconName) {
-		var res = getClass().getClassLoader().getResource(iconName);
-		if (null == res) {
-			throw new IllegalArgumentException("Icon '" + iconName + "' cannot be found in resource folder");
-		}
-		File file = null;
-		try {
-			file = Paths.get(res.toURI()).toFile();
-		} catch (URISyntaxException e) {
-			throw new IllegalArgumentException("Icon '" + iconName + "' cannot be converted to file", e);
-		}
-		return file.getAbsolutePath();
-	}
-
-	private String getPathString(URI uri) {
-		return uri.getPath().substring(1);
 	}
 }
