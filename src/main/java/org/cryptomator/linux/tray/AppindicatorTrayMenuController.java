@@ -12,8 +12,6 @@ import org.cryptomator.integrations.tray.TrayMenuException;
 import org.cryptomator.integrations.tray.TrayMenuItem;
 import org.purejava.appindicator.GCallback;
 import org.purejava.appindicator.MemoryAllocator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
@@ -27,7 +25,7 @@ import static org.purejava.appindicator.app_indicator_h.*;
 @OperatingSystem(OperatingSystem.Value.LINUX)
 public class AppindicatorTrayMenuController implements TrayMenuController {
 
-	private static final Logger LOG = LoggerFactory.getLogger(AppindicatorTrayMenuController.class);
+	private static final String APP_INDICATOR_ID = "org.cryptomator.Cryptomator";
 
 	private static final SegmentScope SCOPE = SegmentScope.global();
 	private MemorySegment indicator;
@@ -43,13 +41,12 @@ public class AppindicatorTrayMenuController implements TrayMenuController {
 		TrayIconLoader.FreedesktopIconName callback = this::showTrayIconWithSVG;
 		iconLoader.accept(callback);
 		gtk_widget_show_all(menu);
-		app_indicator_set_menu(indicator, menu);
 		app_indicator_set_status(indicator, APP_INDICATOR_STATUS_ACTIVE());
 	}
 
 	private void showTrayIconWithSVG(String s) {
 		try (var arena = Arena.openConfined()) {
-			indicator = app_indicator_new(arena.allocateUtf8String("org.cryptomator.Cryptomator"),
+			indicator = app_indicator_new(arena.allocateUtf8String(APP_INDICATOR_ID),
 					arena.allocateUtf8String(s),
 					APP_INDICATOR_CATEGORY_APPLICATION_STATUS());
 		}
@@ -110,7 +107,6 @@ public class AppindicatorTrayMenuController implements TrayMenuController {
 					gtk_menu_shell_append(menu, gtkMenuItem);
 				}
 			}
-			gtk_widget_show_all(menu);
 		}
 	}
 }
