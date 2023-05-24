@@ -91,8 +91,7 @@
 		<!-- Java bindings for appindicator -->
 		<dependency>
 			<groupId>org.purejava</groupId>
-			<artifactId>appindicator-gtk3-java</artifactId>
-			<classifier>libayatana-appindicator-libappindicator-minimal</classifier>
+			<artifactId>libappindicator-gtk3-java-minimal</artifactId>
 			<version>${appindicator.version}</version>
 		</dependency>
 		<dependency>

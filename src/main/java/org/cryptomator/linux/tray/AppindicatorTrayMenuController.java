@@ -11,7 +11,7 @@ import org.cryptomator.integrations.tray.TrayMenuController;
 import org.cryptomator.integrations.tray.TrayMenuException;
 import org.cryptomator.integrations.tray.TrayMenuItem;
 import org.purejava.appindicator.GCallback;
-import org.purejava.appindicator.MemoryAllocator;
+import org.purejava.appindicator.NativeLibUtilities;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
@@ -33,7 +33,7 @@ public class AppindicatorTrayMenuController implements TrayMenuController {
 
 	@CheckAvailability
 	public static boolean isAvailable() {
-		return MemoryAllocator.isLoadedNativeLib();
+		return NativeLibUtilities.isLoadedNativeLib();
 	}
 
 	@Override
