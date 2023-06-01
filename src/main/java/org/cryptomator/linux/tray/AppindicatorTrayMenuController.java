@@ -1,5 +1,6 @@
 package org.cryptomator.linux.tray;
 
+import org.apache.commons.lang3.StringUtils;
 import org.cryptomator.integrations.common.CheckAvailability;
 import org.cryptomator.integrations.common.OperatingSystem;
 import org.cryptomator.integrations.common.Priority;
@@ -22,9 +23,9 @@ import java.util.function.Consumer;
 import static org.purejava.appindicator.app_indicator_h.*;
 
 @Priority(1000)
+@CheckAvailability
 @OperatingSystem(OperatingSystem.Value.LINUX)
 public class AppindicatorTrayMenuController implements TrayMenuController {
-
 	private static final String APP_INDICATOR_ID = "org.cryptomator.Cryptomator";
 
 	private static final SegmentScope SCOPE = SegmentScope.global();
@@ -46,9 +47,18 @@ public class AppindicatorTrayMenuController implements TrayMenuController {
 
 	private void showTrayIconWithSVG(String s) {
 		try (var arena = Arena.openConfined()) {
-			indicator = app_indicator_new(arena.allocateUtf8String(APP_INDICATOR_ID),
+			var appdir = System.getenv("APPDIR");
+			if (null == appdir || appdir.isBlank()) {
+				appdir = "";
+			}
+			if (appdir.endsWith("/")) {
+				appdir = StringUtils.chop(appdir);
+			}
+			indicator = app_indicator_new_with_path(arena.allocateUtf8String(APP_INDICATOR_ID),
 					arena.allocateUtf8String(s),
-					APP_INDICATOR_CATEGORY_APPLICATION_STATUS());
+					APP_INDICATOR_CATEGORY_APPLICATION_STATUS(),
+					// find tray icons theme in mounted AppImage
+					arena.allocateUtf8String(appdir + "/usr/share/icons/hicolor/symbolic/apps"));
 		}
 	}
 
