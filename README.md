@@ -4,5 +4,5 @@ Linux-specific implemenations of the [integrations-api](https://github.com/crypt
 # Config
 
 This project uses the following JVM properties:
-* `cryptomator.integrationsLinux.appIndicator.svgSource` - specifies the path from which the svg images are loaded
+* `cryptomator.integrationsLinux.trayIconsDir` - specifies the directory from which svg images for the tray icon are loaded
 
