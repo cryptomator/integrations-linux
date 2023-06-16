@@ -1,7 +1,6 @@
 import org.cryptomator.integrations.keychain.KeychainAccessProvider;
 import org.cryptomator.integrations.revealpath.RevealPathService;
 import org.cryptomator.integrations.tray.TrayMenuController;
-import org.cryptomator.linux.keychain.KDEWalletKeychainAccess;
 import org.cryptomator.linux.keychain.SecretServiceKeychainAccess;
 import org.cryptomator.linux.revealpath.DBusSendRevealPathService;
 import org.cryptomator.linux.tray.AppindicatorTrayMenuController;
@@ -16,7 +15,7 @@ module org.cryptomator.integrations.linux {
 	requires org.purejava.kwallet;
 	requires secret.service;
 
-	provides KeychainAccessProvider with SecretServiceKeychainAccess, KDEWalletKeychainAccess;
+	provides KeychainAccessProvider with SecretServiceKeychainAccess;
 	provides RevealPathService with DBusSendRevealPathService;
 	provides TrayMenuController with AppindicatorTrayMenuController;
 
