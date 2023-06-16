@@ -18,6 +18,7 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentScope;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 import static org.purejava.appindicator.app_indicator_h.*;
@@ -27,10 +28,12 @@ import static org.purejava.appindicator.app_indicator_h.*;
 @OperatingSystem(OperatingSystem.Value.LINUX)
 public class AppindicatorTrayMenuController implements TrayMenuController {
 	private static final String APP_INDICATOR_ID = "org.cryptomator.Cryptomator";
+	private static final String SVG_SOURCE_PROPERTY = "cryptomator.integrationsLinux.trayIconsDir";
 
 	private static final SegmentScope SCOPE = SegmentScope.global();
 	private MemorySegment indicator;
 	private MemorySegment menu = gtk_menu_new();
+	private Optional<String> svgSourcePath;
 
 	@CheckAvailability
 	public static boolean isAvailable() {
@@ -47,18 +50,20 @@ public class AppindicatorTrayMenuController implements TrayMenuController {
 
 	private void showTrayIconWithSVG(String s) {
 		try (var arena = Arena.openConfined()) {
-			var appdir = System.getenv("APPDIR");
-			if (null == appdir || appdir.isBlank()) {
-				appdir = "";
+			svgSourcePath = Optional.ofNullable(System.getProperty(SVG_SOURCE_PROPERTY));
+			// flatpak
+			if (svgSourcePath.isEmpty()) {
+				indicator = app_indicator_new(arena.allocateUtf8String(APP_INDICATOR_ID),
+						arena.allocateUtf8String(s),
+						APP_INDICATOR_CATEGORY_APPLICATION_STATUS());
+			// AppImage and ppa
+			} else {
+				indicator = app_indicator_new_with_path(arena.allocateUtf8String(APP_INDICATOR_ID),
+						arena.allocateUtf8String(s),
+						APP_INDICATOR_CATEGORY_APPLICATION_STATUS(),
+						// find tray icons theme in mounted AppImage / installed on system by ppa
+						arena.allocateUtf8String(svgSourcePath.get()));
 			}
-			if (appdir.endsWith("/")) {
-				appdir = StringUtils.chop(appdir);
-			}
-			indicator = app_indicator_new_with_path(arena.allocateUtf8String(APP_INDICATOR_ID),
-					arena.allocateUtf8String(s),
-					APP_INDICATOR_CATEGORY_APPLICATION_STATUS(),
-					// find tray icons theme in mounted AppImage
-					arena.allocateUtf8String(appdir + "/usr/share/icons/hicolor/symbolic/apps"));
 		}
 	}
 
