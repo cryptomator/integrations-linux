@@ -10,9 +10,9 @@ import org.freedesktop.dbus.connections.impl.DBusConnectionBuilder;
 import org.freedesktop.dbus.exceptions.DBusConnectionException;
 import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.exceptions.DBusExecutionException;
-import org.kde.KWallet;
-import org.kde.Static;
-import org.purejava.KDEWallet;
+import org.purejava.kwallet.KWallet;
+import org.purejava.kwallet.KDEWallet;
+import org.purejava.kwallet.Static;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
