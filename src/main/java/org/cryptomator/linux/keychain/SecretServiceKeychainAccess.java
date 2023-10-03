@@ -1,12 +1,11 @@
 package org.cryptomator.linux.keychain;
 
+import de.swiesend.secretservice.simple.SimpleCollection;
 import org.cryptomator.integrations.common.OperatingSystem;
 import org.cryptomator.integrations.common.Priority;
 import org.cryptomator.integrations.keychain.KeychainAccessException;
 import org.cryptomator.integrations.keychain.KeychainAccessProvider;
-import org.freedesktop.dbus.exceptions.DBusConnectionException;
 import org.freedesktop.dbus.exceptions.DBusExecutionException;
-import org.freedesktop.secret.simple.SimpleCollection;
 
 import java.io.IOException;
 import java.util.List;
