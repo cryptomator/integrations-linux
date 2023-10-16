@@ -14,7 +14,7 @@ module org.cryptomator.integrations.linux {
 	requires org.freedesktop.dbus;
 	requires org.purejava.appindicator;
 	requires org.purejava.kwallet;
-	requires secret.service;
+	requires de.swiesend.secretservice;
 
 	provides KeychainAccessProvider with SecretServiceKeychainAccess, KDEWalletKeychainAccess;
 	provides RevealPathService with DBusSendRevealPathService;
