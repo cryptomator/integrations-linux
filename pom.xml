@@ -52,7 +52,7 @@
 		<junit.version>5.10.0</junit.version>
 
 		<!-- build plugin dependencies -->
-		<dependency-check.version>8.4.2</dependency-check.version>
+		<dependency-check.version>8.4.3</dependency-check.version>
 		<nexus-staging.version>1.6.8</nexus-staging.version>
 	</properties>
 
