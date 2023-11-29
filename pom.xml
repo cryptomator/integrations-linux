@@ -49,7 +49,7 @@
 		<commons-lang3.version>3.13.0</commons-lang3.version>
 
 		<!-- test dependencies -->
-		<junit.version>5.10.0</junit.version>
+		<junit.version>5.10.1</junit.version>
 
 		<!-- build plugin dependencies -->
 		<dependency-check.version>8.4.2</dependency-check.version>
