@@ -95,11 +95,7 @@ public class KDEWalletKeychainAccess implements KeychainAccessProvider {
 			} catch (DBusConnectionException | DBusExecutionException de) {
 				LOG.warn("Connecting to SESSION bus failed.", de);
 				LOG.warn("Falling back to SYSTEM DBus");
-				try {
-					return DBusConnectionBuilder.forSystemBus().build();
-				} catch (DBusException e) {
-					throw e;
-				}
+				return DBusConnectionBuilder.forSystemBus().build();
 			}
 		}
 
@@ -144,7 +140,7 @@ public class KDEWalletKeychainAccess implements KeychainAccessProvider {
 				} else {
 					LOG.debug("loadPassphrase: wallet is closed.");
 				}
-				return (password.equals("")) ? null : password.toCharArray();
+				return (password.isEmpty()) ? null : password.toCharArray();
 			} catch (RuntimeException e) {
 				throw new KeychainAccessException("Loading the passphrase failed.", e);
 			}
