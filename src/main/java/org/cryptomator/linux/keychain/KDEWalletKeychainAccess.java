@@ -1,10 +1,10 @@
 package org.cryptomator.linux.keychain;
 
-import com.google.common.base.Preconditions;
 import org.cryptomator.integrations.common.OperatingSystem;
 import org.cryptomator.integrations.common.Priority;
 import org.cryptomator.integrations.keychain.KeychainAccessException;
 import org.cryptomator.integrations.keychain.KeychainAccessProvider;
+import org.cryptomator.linux.util.CheckUtil;
 import org.freedesktop.dbus.connections.impl.DBusConnection;
 import org.freedesktop.dbus.connections.impl.DBusConnectionBuilder;
 import org.freedesktop.dbus.exceptions.DBusConnectionException;
@@ -49,25 +49,25 @@ public class KDEWalletKeychainAccess implements KeychainAccessProvider {
 
 	@Override
 	public void storePassphrase(String key, String displayName, CharSequence passphrase) throws KeychainAccessException {
-		Preconditions.checkState(wallet.isPresent(), "Keychain not supported.");
+		CheckUtil.checkState(wallet.isPresent(), "Keychain not supported.");
 		wallet.get().storePassphrase(key, passphrase);
 	}
 
 	@Override
 	public char[] loadPassphrase(String key) throws KeychainAccessException {
-		Preconditions.checkState(wallet.isPresent(), "Keychain not supported.");
+		CheckUtil.checkState(wallet.isPresent(), "Keychain not supported.");
 		return wallet.get().loadPassphrase(key);
 	}
 
 	@Override
 	public void deletePassphrase(String key) throws KeychainAccessException {
-		Preconditions.checkState(wallet.isPresent(), "Keychain not supported.");
+		CheckUtil.checkState(wallet.isPresent(), "Keychain not supported.");
 		wallet.get().deletePassphrase(key);
 	}
 
 	@Override
 	public void changePassphrase(String key, String displayName, CharSequence passphrase) throws KeychainAccessException {
-		Preconditions.checkState(wallet.isPresent(), "Keychain not supported.");
+		CheckUtil.checkState(wallet.isPresent(), "Keychain not supported.");
 		wallet.get().changePassphrase(key, passphrase);
 	}
 
