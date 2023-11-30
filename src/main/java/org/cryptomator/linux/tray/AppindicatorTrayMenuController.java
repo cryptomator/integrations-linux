@@ -31,7 +31,6 @@ public class AppindicatorTrayMenuController implements TrayMenuController {
 	private static final Arena ARENA = Arena.global();
 	private MemorySegment indicator;
 	private MemorySegment menu = gtk_menu_new();
-	private Optional<String> svgSourcePath;
 
 	@CheckAvailability
 	public static boolean isAvailable() {
@@ -48,9 +47,9 @@ public class AppindicatorTrayMenuController implements TrayMenuController {
 
 	private void showTrayIconWithSVG(String s) {
 		try (var arena = Arena.ofConfined()) {
-			svgSourcePath = Optional.ofNullable(System.getProperty(SVG_SOURCE_PROPERTY));
+			var svgSourcePath = System.getProperty(SVG_SOURCE_PROPERTY);
 			// flatpak
-			if (svgSourcePath.isEmpty()) {
+			if (svgSourcePath != null) {
 				indicator = app_indicator_new(arena.allocateUtf8String(APP_INDICATOR_ID),
 						arena.allocateUtf8String(s),
 						APP_INDICATOR_CATEGORY_APPLICATION_STATUS());
@@ -60,7 +59,7 @@ public class AppindicatorTrayMenuController implements TrayMenuController {
 						arena.allocateUtf8String(s),
 						APP_INDICATOR_CATEGORY_APPLICATION_STATUS(),
 						// find tray icons theme in mounted AppImage / installed on system by ppa
-						arena.allocateUtf8String(svgSourcePath.get()));
+						arena.allocateUtf8String(svgSourcePath));
 			}
 		}
 	}
@@ -105,7 +104,7 @@ public class AppindicatorTrayMenuController implements TrayMenuController {
 					}
 					gtk_menu_shell_append(menu, gtkMenuItem);
 				}
-				case SeparatorItem separatorItem -> {
+				case SeparatorItem _ -> {
 					var gtkSeparator = gtk_menu_item_new();
 					gtk_menu_shell_append(menu, gtkSeparator);
 				}

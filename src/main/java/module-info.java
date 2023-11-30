@@ -9,8 +9,6 @@ import org.cryptomator.linux.tray.AppindicatorTrayMenuController;
 module org.cryptomator.integrations.linux {
 	requires org.cryptomator.integrations.api;
 	requires org.slf4j;
-	requires com.google.common;
-	requires org.apache.commons.lang3;
 	requires org.freedesktop.dbus;
 	requires org.purejava.appindicator;
 	requires org.purejava.kwallet;
