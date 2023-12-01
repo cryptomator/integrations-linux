@@ -50,7 +50,7 @@
 		<junit.version>5.10.1</junit.version>
 
 		<!-- build plugin dependencies -->
-		<dependency-check.version>8.4.2</dependency-check.version>
+		<dependency-check.version>9.0.1</dependency-check.version>
 		<nexus-staging.version>1.6.8</nexus-staging.version>
 	</properties>
 
@@ -105,7 +105,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>3.2.1</version>
+				<version>3.2.2</version>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -143,7 +143,7 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.6.0</version>
+				<version>3.6.2</version>
 				<executions>
 					<execution>
 						<id>attach-javadocs</id>
