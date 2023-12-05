@@ -1,6 +1,5 @@
 package org.cryptomator.linux.tray;
 
-import org.apache.commons.lang3.StringUtils;
 import org.cryptomator.integrations.common.CheckAvailability;
 import org.cryptomator.integrations.common.OperatingSystem;
 import org.cryptomator.integrations.common.Priority;
@@ -16,7 +15,6 @@ import org.purejava.appindicator.NativeLibUtilities;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
-import java.lang.foreign.SegmentScope;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -30,10 +28,9 @@ public class AppindicatorTrayMenuController implements TrayMenuController {
 	private static final String APP_INDICATOR_ID = "org.cryptomator.Cryptomator";
 	private static final String SVG_SOURCE_PROPERTY = "cryptomator.integrationsLinux.trayIconsDir";
 
-	private static final SegmentScope SCOPE = SegmentScope.global();
+	private static final Arena ARENA = Arena.global();
 	private MemorySegment indicator;
 	private MemorySegment menu = gtk_menu_new();
-	private Optional<String> svgSourcePath;
 
 	@CheckAvailability
 	public static boolean isAvailable() {
@@ -49,10 +46,10 @@ public class AppindicatorTrayMenuController implements TrayMenuController {
 	}
 
 	private void showTrayIconWithSVG(String s) {
-		try (var arena = Arena.openConfined()) {
-			svgSourcePath = Optional.ofNullable(System.getProperty(SVG_SOURCE_PROPERTY));
+		try (var arena = Arena.ofConfined()) {
+			var svgSourcePath = System.getProperty(SVG_SOURCE_PROPERTY);
 			// flatpak
-			if (svgSourcePath.isEmpty()) {
+			if (svgSourcePath != null) {
 				indicator = app_indicator_new(arena.allocateUtf8String(APP_INDICATOR_ID),
 						arena.allocateUtf8String(s),
 						APP_INDICATOR_CATEGORY_APPLICATION_STATUS());
@@ -62,7 +59,7 @@ public class AppindicatorTrayMenuController implements TrayMenuController {
 						arena.allocateUtf8String(s),
 						APP_INDICATOR_CATEGORY_APPLICATION_STATUS(),
 						// find tray icons theme in mounted AppImage / installed on system by ppa
-						arena.allocateUtf8String(svgSourcePath.get()));
+						arena.allocateUtf8String(svgSourcePath));
 			}
 		}
 	}
@@ -74,7 +71,7 @@ public class AppindicatorTrayMenuController implements TrayMenuController {
 	}
 
 	private void updateTrayIconWithSVG(String s) {
-		try (var arena = Arena.openConfined()) {
+		try (var arena = Arena.ofConfined()) {
 			app_indicator_set_icon(indicator, arena.allocateUtf8String(s));
 		}
 	}
@@ -97,24 +94,24 @@ public class AppindicatorTrayMenuController implements TrayMenuController {
 			switch (item) {
 				case ActionItem a -> {
 					var gtkMenuItem = gtk_menu_item_new();
-					try (var arena = Arena.openConfined()) {
+					try (var arena = Arena.ofConfined()) {
 						gtk_menu_item_set_label(gtkMenuItem, arena.allocateUtf8String(a.title()));
 						g_signal_connect_object(gtkMenuItem,
 								arena.allocateUtf8String("activate"),
-								GCallback.allocate(new ActionItemCallback(a), SCOPE),
+								GCallback.allocate(new ActionItemCallback(a), ARENA),
 								menu,
 								0);
 					}
 					gtk_menu_shell_append(menu, gtkMenuItem);
 				}
-				case SeparatorItem separatorItem -> {
+				case SeparatorItem _ -> {
 					var gtkSeparator = gtk_menu_item_new();
 					gtk_menu_shell_append(menu, gtkSeparator);
 				}
 				case SubMenuItem s -> {
 					var gtkMenuItem = gtk_menu_item_new();
 					var gtkSubmenu = gtk_menu_new();
-					try (var arena = Arena.openConfined()) {
+					try (var arena = Arena.ofConfined()) {
 						gtk_menu_item_set_label(gtkMenuItem, arena.allocateUtf8String(s.title()));
 					}
 					addChildren(gtkSubmenu, s.items());

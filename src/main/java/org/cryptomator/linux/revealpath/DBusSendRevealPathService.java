@@ -1,6 +1,5 @@
 package org.cryptomator.linux.revealpath;
 
-import com.google.common.base.Preconditions;
 import org.cryptomator.integrations.revealpath.RevealFailedException;
 import org.cryptomator.integrations.revealpath.RevealPathService;
 
@@ -91,7 +90,9 @@ public class DBusSendRevealPathService implements RevealPathService {
 	 * @throws IOException if the Inputer reader on the process output cannot be created
 	 */
 	private boolean parseOutputForFileManagerInterface(Process fileManager1Process) throws IOException {
-		Preconditions.checkState(!fileManager1Process.isAlive());
+		if( fileManager1Process.isAlive()) {
+			throw new IllegalArgumentException("Process " + fileManager1Process + " must be terminated to read output.");
+		}
 		try (var reader = fileManager1Process.inputReader(StandardCharsets.UTF_8)) {
 			return reader.lines().map(String::trim).anyMatch(FILEMANAGER1_XML_ELEMENT::equals);
 		}
