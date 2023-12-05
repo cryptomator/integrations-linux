@@ -3,14 +3,27 @@ updates:
   - package-ecosystem: "maven"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
       day: "monday"
       time: "06:00"
-      timezone: "UTC"
+      timezone: "Etc/UTC"
     groups:
-      maven-dependencies:
+      java-test-dependencies:
+        patterns:
+          - "org.junit.jupiter:*"
+      maven-build-plugins:
+        patterns:
+          - "org.apache.maven.plugins:*"
+          - "org.owasp:dependency-check-maven"
+          - "org.sonatype.plugins:nexus-staging-maven-plugin"
+      java-production-dependencies:
         patterns:
           - "*"
+        exclude-patterns:
+          - "org.junit.jupiter:*"
+          - "org.apache.maven.plugins:*"
+          - "org.owasp:dependency-check-maven"
+          - "org.sonatype.plugins:nexus-staging-maven-plugin"
 
   - package-ecosystem: "github-actions"
     directory: "/" # even for `.github/workflows`
