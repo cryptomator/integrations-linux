@@ -50,7 +50,7 @@
 		<junit.version>5.10.1</junit.version>
 
 		<!-- build plugin dependencies -->
-		<dependency-check.version>8.4.2</dependency-check.version>
+		<dependency-check.version>9.0.4</dependency-check.version>
 		<nexus-staging.version>1.6.8</nexus-staging.version>
 	</properties>
 
@@ -211,11 +211,11 @@
 						<artifactId>dependency-check-maven</artifactId>
 						<version>${dependency-check.version}</version>
 						<configuration>
-							<cveValidForHours>24</cveValidForHours>
 							<failBuildOnCVSS>0</failBuildOnCVSS>
 							<skipTestScope>true</skipTestScope>
 							<detail>true</detail>
 							<suppressionFile>suppression.xml</suppressionFile>
+							<nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
 						</configuration>
 						<executions>
 							<execution>
