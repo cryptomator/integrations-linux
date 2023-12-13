@@ -27,8 +27,8 @@ jobs:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}-dependency-check
           restore-keys: |
-            ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-            ${{ runner.os }}-maven-
+            setup-java-${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+            setup-java-${{ runner.os }}-maven-
         env:
           SEGMENT_DOWNLOAD_TIMEOUT_MINS: 5
       - name: Run org.owasp:dependency-check plugin
