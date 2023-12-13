@@ -21,7 +21,15 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: 21
-          cache: 'maven'
+    - uses: actions/cache@v3
+      with:
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}-dependency-check
+        restore-keys: |
+          ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          ${{ runner.os }}-maven-
+        env:
+          SEGMENT_DOWNLOAD_TIMEOUT_MINS: 5
       - name: Run org.owasp:dependency-check plugin
         id: dependency-check
         continue-on-error: true
