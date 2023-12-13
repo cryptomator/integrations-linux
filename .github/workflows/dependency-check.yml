@@ -29,8 +29,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
             ${{ runner.os }}-maven-
-          env:
-            SEGMENT_DOWNLOAD_TIMEOUT_MINS: 5
+        env:
+          SEGMENT_DOWNLOAD_TIMEOUT_MINS: 5
       - name: Run org.owasp:dependency-check plugin
         id: dependency-check
         continue-on-error: true
