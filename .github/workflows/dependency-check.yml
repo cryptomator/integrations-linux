@@ -21,14 +21,14 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: 21
-      - name: Cache Maven Repository
+          cache: 'maven'
+      - name: Cache NVD DB
         uses: actions/cache@v3
         with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}-dependency-check
+          path: ~/.m2/repository/org/owasp/dependency-check-data/
+          key: dependency-check-${{ github.run_id }}
           restore-keys: |
-            setup-java-${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-            setup-java-${{ runner.os }}-maven-
+            dependency-check
         env:
           SEGMENT_DOWNLOAD_TIMEOUT_MINS: 5
       - name: Run org.owasp:dependency-check plugin
