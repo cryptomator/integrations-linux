@@ -6,6 +6,8 @@ import org.cryptomator.integrations.common.Priority;
 import org.cryptomator.integrations.keychain.KeychainAccessException;
 import org.cryptomator.integrations.keychain.KeychainAccessProvider;
 import org.freedesktop.dbus.exceptions.DBusExecutionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
@@ -14,6 +16,8 @@ import java.util.Map;
 @Priority(900)
 @OperatingSystem(OperatingSystem.Value.LINUX)
 public class SecretServiceKeychainAccess implements KeychainAccessProvider {
+
+	private static Logger LOG = LoggerFactory.getLogger(SecretServiceKeychainAccess.class);
 
 	private final String LABEL_FOR_SECRET_IN_KEYRING = "Cryptomator";
 
@@ -27,12 +31,8 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 		try {
 			return SimpleCollection.isAvailable();
 		} catch (ExceptionInInitializerError e) {
-			//TODO: remove try-catch once secret-service lib is fixed
-			if(e.getException() instanceof DBusExecutionException) {
-				return false;
-			} else {
-				throw e;
-			}
+			LOG.warn("Initializing secret service keychain access failed", e.getException());
+			return false;
 		}
 	}
 
