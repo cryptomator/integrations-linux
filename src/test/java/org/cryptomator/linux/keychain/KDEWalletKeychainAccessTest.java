@@ -3,6 +3,7 @@ package org.cryptomator.linux.keychain;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIf;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
@@ -14,6 +15,7 @@ import java.util.concurrent.TimeUnit;
  * Unit tests for KWallet access via DBUS.
  */
 @EnabledOnOs(OS.LINUX)
+@EnabledIf("osEnvironmentSuitable")
 public class KDEWalletKeychainAccessTest {
 
 	private static boolean isInstalled;
@@ -39,5 +41,10 @@ public class KDEWalletKeychainAccessTest {
 	public void testIsSupported() {
 		KDEWalletKeychainAccess keychainAccess = new KDEWalletKeychainAccess();
 		Assertions.assertEquals(isInstalled, keychainAccess.isSupported());
+	}
+
+
+	private static boolean osEnvironmentSuitable() {
+		return System.getenv().containsKey("DISPLAY");
 	}
 }
