@@ -49,7 +49,7 @@ public class AppindicatorTrayMenuController implements TrayMenuController {
 		try (var arena = Arena.ofConfined()) {
 			var svgSourcePath = System.getProperty(SVG_SOURCE_PROPERTY);
 			// flatpak
-			if (svgSourcePath != null) {
+			if (svgSourcePath == null) {
 				indicator = app_indicator_new(arena.allocateUtf8String(APP_INDICATOR_ID),
 						arena.allocateUtf8String(s),
 						APP_INDICATOR_CATEGORY_APPLICATION_STATUS());
