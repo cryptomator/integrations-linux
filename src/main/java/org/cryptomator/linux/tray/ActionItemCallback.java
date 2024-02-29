@@ -5,7 +5,7 @@ import org.purejava.appindicator.GCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-record ActionItemCallback (ActionItem actionItem) implements GCallback {
+record ActionItemCallback (ActionItem actionItem) implements GCallback.Function {
 	private static final Logger LOG = LoggerFactory.getLogger(ActionItemCallback.class);
 
 	@Override
