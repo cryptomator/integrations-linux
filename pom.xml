@@ -47,7 +47,7 @@
 		<slf4j.version>2.0.11</slf4j.version>
 
 		<!-- test dependencies -->
-		<junit.version>5.10.1</junit.version>
+		<junit.version>5.10.2</junit.version>
 
 		<!-- build plugin dependencies -->
 		<dependency-check.version>9.0.9</dependency-check.version>
