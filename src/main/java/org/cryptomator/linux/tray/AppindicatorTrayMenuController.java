@@ -10,16 +10,18 @@ import org.cryptomator.integrations.tray.TrayIconLoader;
 import org.cryptomator.integrations.tray.TrayMenuController;
 import org.cryptomator.integrations.tray.TrayMenuException;
 import org.cryptomator.integrations.tray.TrayMenuItem;
+import org.purejava.appindicator.AppIndicator;
 import org.purejava.appindicator.GCallback;
-import org.purejava.appindicator.NativeLibUtilities;
+import org.purejava.appindicator.GObject;
+import org.purejava.appindicator.Gtk;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Consumer;
 
-import static org.purejava.appindicator.app_indicator_h.*;
+import static org.purejava.appindicator.app_indicator_h.APP_INDICATOR_CATEGORY_APPLICATION_STATUS;
+import static org.purejava.appindicator.app_indicator_h.APP_INDICATOR_STATUS_ACTIVE;
 
 @Priority(1000)
 @CheckAvailability
@@ -30,37 +32,35 @@ public class AppindicatorTrayMenuController implements TrayMenuController {
 
 	private static final Arena ARENA = Arena.global();
 	private MemorySegment indicator;
-	private MemorySegment menu = gtk_menu_new();
+	private MemorySegment menu = Gtk.newMenu();
 
 	@CheckAvailability
 	public static boolean isAvailable() {
-		return NativeLibUtilities.isLoadedNativeLib();
+		return AppIndicator.isLoaded();
 	}
 
 	@Override
 	public void showTrayIcon(Consumer<TrayIconLoader> iconLoader, Runnable runnable, String s) throws TrayMenuException {
 		TrayIconLoader.FreedesktopIconName callback = this::showTrayIconWithSVG;
 		iconLoader.accept(callback);
-		gtk_widget_show_all(menu);
-		app_indicator_set_status(indicator, APP_INDICATOR_STATUS_ACTIVE());
+		Gtk.widgetShowAll(menu);
+		AppIndicator.setStatus(indicator, APP_INDICATOR_STATUS_ACTIVE());
 	}
 
-	private void showTrayIconWithSVG(String s) {
-		try (var arena = Arena.ofConfined()) {
-			var svgSourcePath = System.getProperty(SVG_SOURCE_PROPERTY);
-			// flatpak
-			if (svgSourcePath == null) {
-				indicator = app_indicator_new(arena.allocateUtf8String(APP_INDICATOR_ID),
-						arena.allocateUtf8String(s),
-						APP_INDICATOR_CATEGORY_APPLICATION_STATUS());
-			// AppImage and ppa
-			} else {
-				indicator = app_indicator_new_with_path(arena.allocateUtf8String(APP_INDICATOR_ID),
-						arena.allocateUtf8String(s),
-						APP_INDICATOR_CATEGORY_APPLICATION_STATUS(),
-						// find tray icons theme in mounted AppImage / installed on system by ppa
-						arena.allocateUtf8String(svgSourcePath));
-			}
+	private void showTrayIconWithSVG(String iconName) {
+		var svgSourcePath = System.getProperty(SVG_SOURCE_PROPERTY);
+		// flatpak
+		if (svgSourcePath == null) {
+			indicator = AppIndicator.newIndicator(APP_INDICATOR_ID,
+					iconName,
+					APP_INDICATOR_CATEGORY_APPLICATION_STATUS());
+		// AppImage and ppa
+		} else {
+			indicator = AppIndicator.newIndicatorWithPath(APP_INDICATOR_ID,
+					iconName,
+					APP_INDICATOR_CATEGORY_APPLICATION_STATUS(),
+					// find tray icons theme in mounted AppImage / installed on system by ppa
+					svgSourcePath);
 		}
 	}
 
@@ -70,18 +70,16 @@ public class AppindicatorTrayMenuController implements TrayMenuController {
 		iconLoader.accept(callback);
 	}
 
-	private void updateTrayIconWithSVG(String s) {
-		try (var arena = Arena.ofConfined()) {
-			app_indicator_set_icon(indicator, arena.allocateUtf8String(s));
-		}
+	private void updateTrayIconWithSVG(String iconName) {
+		AppIndicator.setIcon(indicator, iconName);
 	}
 
 	@Override
 	public void updateTrayMenu(List<TrayMenuItem> items) throws TrayMenuException {
-		menu = gtk_menu_new();
+		menu = Gtk.newMenu();
 		addChildren(menu, items);
-		gtk_widget_show_all(menu);
-		app_indicator_set_menu(indicator, menu);
+		Gtk.widgetShowAll(menu);
+		AppIndicator.setMenu(indicator, menu);
 	}
 
 	@Override
@@ -93,30 +91,26 @@ public class AppindicatorTrayMenuController implements TrayMenuController {
 		for (var item : items) {
 			switch (item) {
 				case ActionItem a -> {
-					var gtkMenuItem = gtk_menu_item_new();
-					try (var arena = Arena.ofConfined()) {
-						gtk_menu_item_set_label(gtkMenuItem, arena.allocateUtf8String(a.title()));
-						g_signal_connect_object(gtkMenuItem,
-								arena.allocateUtf8String("activate"),
-								GCallback.allocate(new ActionItemCallback(a), ARENA),
-								menu,
-								0);
-					}
-					gtk_menu_shell_append(menu, gtkMenuItem);
+					var gtkMenuItem = Gtk.newMenuItem();
+					Gtk.menuItemSetLabel(gtkMenuItem, a.title());
+					GObject.signalConnectObject(gtkMenuItem,
+							"activate",
+							GCallback.allocate(new ActionItemCallback(a), ARENA),
+							menu,
+							0);
+					Gtk.menuShellAppend(menu, gtkMenuItem);
 				}
 				case SeparatorItem _ -> {
-					var gtkSeparator = gtk_menu_item_new();
-					gtk_menu_shell_append(menu, gtkSeparator);
+					var gtkSeparator = Gtk.newMenuItem();
+					Gtk.menuShellAppend(menu, gtkSeparator);
 				}
 				case SubMenuItem s -> {
-					var gtkMenuItem = gtk_menu_item_new();
-					var gtkSubmenu = gtk_menu_new();
-					try (var arena = Arena.ofConfined()) {
-						gtk_menu_item_set_label(gtkMenuItem, arena.allocateUtf8String(s.title()));
-					}
+					var gtkMenuItem = Gtk.newMenuItem();
+					var gtkSubmenu = Gtk.newMenu();
+					Gtk.menuItemSetLabel(gtkMenuItem, s.title());
 					addChildren(gtkSubmenu, s.items());
-					gtk_menu_item_set_submenu(gtkMenuItem, gtkSubmenu);
-					gtk_menu_shell_append(menu, gtkMenuItem);
+					Gtk.menuItemSetSubmenu(gtkMenuItem, gtkSubmenu);
+					Gtk.menuShellAppend(menu, gtkMenuItem);
 				}
 			}
 		}
