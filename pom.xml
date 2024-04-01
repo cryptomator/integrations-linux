@@ -43,7 +43,7 @@
 		<api.version>1.3.1</api.version>
 		<secret-service.version>2.0.1-alpha</secret-service.version>
 		<kdewallet.version>1.4.0</kdewallet.version>
-		<appindicator.version>1.3.6</appindicator.version>
+		<appindicator.version>1.4.0</appindicator.version>
 		<slf4j.version>2.0.12</slf4j.version>
 
 		<!-- test dependencies -->
