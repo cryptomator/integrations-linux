@@ -50,7 +50,7 @@
 		<junit.version>5.10.2</junit.version>
 
 		<!-- build plugin dependencies -->
-		<dependency-check.version>9.0.9</dependency-check.version>
+		<dependency-check.version>9.1.0</dependency-check.version>
 		<nexus-staging.version>1.6.8</nexus-staging.version>
 	</properties>
 
@@ -94,7 +94,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.12.1</version>
+				<version>3.13.0</version>
 				<configuration>
 					<release>${project.jdk.version}</release>
 					<compilerArgs>
@@ -237,7 +237,7 @@
 				<plugins>
 					<plugin>
 						<artifactId>maven-gpg-plugin</artifactId>
-						<version>3.1.0</version>
+						<version>3.2.2</version>
 						<executions>
 							<execution>
 								<id>sign-artifacts</id>
