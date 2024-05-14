@@ -10,6 +10,7 @@ import org.cryptomator.integrations.tray.TrayIconLoader;
 import org.cryptomator.integrations.tray.TrayMenuController;
 import org.cryptomator.integrations.tray.TrayMenuException;
 import org.cryptomator.integrations.tray.TrayMenuItem;
+import org.cryptomator.linux.util.CheckUtil;
 import org.purejava.appindicator.AppIndicator;
 import org.purejava.appindicator.GCallback;
 import org.purejava.appindicator.GObject;
@@ -32,7 +33,7 @@ public class AppindicatorTrayMenuController implements TrayMenuController {
 
 	private static final Arena ARENA = Arena.global();
 	private MemorySegment indicator;
-	private MemorySegment menu = Gtk.newMenu();
+	private MemorySegment menu;
 
 	@CheckAvailability
 	public static boolean isAvailable() {
@@ -41,6 +42,7 @@ public class AppindicatorTrayMenuController implements TrayMenuController {
 
 	@Override
 	public void showTrayIcon(Consumer<TrayIconLoader> iconLoader, Runnable runnable, String s) throws TrayMenuException {
+		menu = Gtk.newMenu();
 		TrayIconLoader.FreedesktopIconName callback = this::showTrayIconWithSVG;
 		iconLoader.accept(callback);
 		Gtk.widgetShowAll(menu);
@@ -71,11 +73,13 @@ public class AppindicatorTrayMenuController implements TrayMenuController {
 	}
 
 	private void updateTrayIconWithSVG(String iconName) {
+		CheckUtil.checkState(indicator != null, "Appindicator is not setup. Call showTrayIcon(...) first.");
 		AppIndicator.setIcon(indicator, iconName);
 	}
 
 	@Override
 	public void updateTrayMenu(List<TrayMenuItem> items) throws TrayMenuException {
+		CheckUtil.checkState(indicator != null, "Appindicator is not setup. Call showTrayIcon(...) first.");
 		menu = Gtk.newMenu();
 		addChildren(menu, items);
 		Gtk.widgetShowAll(menu);
