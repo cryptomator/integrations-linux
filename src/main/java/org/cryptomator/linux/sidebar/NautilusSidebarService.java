@@ -1,5 +1,6 @@
 package org.cryptomator.linux.sidebar;
 
+import org.cryptomator.integrations.common.CheckAvailability;
 import org.cryptomator.integrations.sidebar.SidebarService;
 import org.cryptomator.integrations.sidebar.SidebarServiceException;
 
@@ -9,9 +10,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+@CheckAvailability
 public class NautilusSidebarService implements SidebarService {
 
 	private static final int MAX_FILE_SIZE = 4096;
@@ -71,5 +74,18 @@ public class NautilusSidebarService implements SidebarService {
 				BOOKMARKS_LOCK.unlock();
 			}
 		}
+	}
+
+	@CheckAvailability
+	public static boolean isSupported() {
+		try {
+			var nautilusExistsProc = new ProcessBuilder().command("test", "`command -v nautilus`").start();
+			if (nautilusExistsProc.waitFor(5000, TimeUnit.MILLISECONDS)) {
+				return nautilusExistsProc.exitValue() == 0;
+			}
+		} catch (IOException | InterruptedException e) {
+			//NO-OP
+		}
+		return false;
 	}
 }
