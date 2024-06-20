@@ -1,6 +1,7 @@
 package org.cryptomator.linux.sidebar;
 
 import org.cryptomator.integrations.common.CheckAvailability;
+import org.cryptomator.integrations.common.Priority;
 import org.cryptomator.integrations.sidebar.SidebarService;
 import org.cryptomator.integrations.sidebar.SidebarServiceException;
 
@@ -14,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+@Priority(100)
 @CheckAvailability
 public class NautilusSidebarService implements SidebarService {
 
