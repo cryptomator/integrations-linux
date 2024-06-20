@@ -69,7 +69,7 @@ public class NautilusSidebarService implements SidebarService {
 				}
 				isRemoved = true;
 			} catch (IOException e) {
-				throw new SidebarServiceException("Removing entry from Nautilus bookmarks faile failed", e);
+				throw new SidebarServiceException("Removing entry from Nautilus bookmarks file failed", e);
 			} finally {
 				BOOKMARKS_LOCK.unlock();
 			}
