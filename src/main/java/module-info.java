@@ -1,10 +1,10 @@
-import org.cryptomator.integrations.sidebar.SidebarService;
 import org.cryptomator.integrations.keychain.KeychainAccessProvider;
+import org.cryptomator.integrations.quickaccess.QuickAccessService;
 import org.cryptomator.integrations.revealpath.RevealPathService;
 import org.cryptomator.integrations.tray.TrayMenuController;
-import org.cryptomator.linux.sidebar.NautilusSidebarService;
 import org.cryptomator.linux.keychain.KDEWalletKeychainAccess;
 import org.cryptomator.linux.keychain.SecretServiceKeychainAccess;
+import org.cryptomator.linux.quickaccess.NautilusBookmarks;
 import org.cryptomator.linux.revealpath.DBusSendRevealPathService;
 import org.cryptomator.linux.tray.AppindicatorTrayMenuController;
 
@@ -19,7 +19,7 @@ module org.cryptomator.integrations.linux {
 	provides KeychainAccessProvider with SecretServiceKeychainAccess, KDEWalletKeychainAccess;
 	provides RevealPathService with DBusSendRevealPathService;
 	provides TrayMenuController with AppindicatorTrayMenuController;
-	provides SidebarService with NautilusSidebarService;
+	provides QuickAccessService with NautilusBookmarks;
 
 	opens org.cryptomator.linux.tray to org.cryptomator.integrations.api;
 }
