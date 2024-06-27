@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.cryptomator</groupId>
 	<artifactId>integrations-linux</artifactId>
-	<version>1.5.0-quickaccess</version>
+	<version>1.5.0-SNAPSHOT</version>
 
 	<name>integrations-linux</name>
 	<description>Provides optional Linux services used by Cryptomator</description>
@@ -40,7 +40,7 @@
 
 		<!-- runtime dependencies -->
 
-		<api.version>1.4.0-quickaccess</api.version>
+		<api.version>1.4.0-beta1</api.version>
 		<secret-service.version>2.0.1-alpha</secret-service.version>
 		<kdewallet.version>1.4.0</kdewallet.version>
 		<slf4j.version>2.0.13</slf4j.version>
