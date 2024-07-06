@@ -16,7 +16,7 @@ import java.util.Map;
 @OperatingSystem(OperatingSystem.Value.LINUX)
 public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 
-	private static Logger LOG = LoggerFactory.getLogger(SecretServiceKeychainAccess.class);
+	private static final Logger LOG = LoggerFactory.getLogger(SecretServiceKeychainAccess.class);
 
 	private final String LABEL_FOR_SECRET_IN_KEYRING = "Cryptomator";
 
@@ -29,6 +29,9 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 	public boolean isSupported() {
 		try {
 			return SimpleCollection.isAvailable();
+		} catch (RuntimeException e) {
+			LOG.warn("Initializing secret service keychain access failed", e);
+			return false;
 		} catch (ExceptionInInitializerError e) {
 			LOG.warn("Initializing secret service keychain access failed", e.getException());
 			return false;
