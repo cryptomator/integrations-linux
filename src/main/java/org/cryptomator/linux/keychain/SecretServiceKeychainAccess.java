@@ -30,10 +30,7 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 		try {
 			return SimpleCollection.isAvailable();
 		} catch (RuntimeException | ExceptionInInitializerError e) {
-			LOG.warn("Initializing secret service keychain access failed", e instanceof ExceptionInInitializerError ? e.getException() : e);
-			return false;
-		} catch (ExceptionInInitializerError e) {
-			LOG.warn("Initializing secret service keychain access failed", e.getException());
+			LOG.warn("Initializing secret service keychain access failed", e instanceof ExceptionInInitializerError errInit ? errInit.getException() : e);
 			return false;
 		}
 	}
