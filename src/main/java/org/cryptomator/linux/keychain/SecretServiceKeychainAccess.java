@@ -29,8 +29,8 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 	public boolean isSupported() {
 		try {
 			return SimpleCollection.isAvailable();
-		} catch (RuntimeException e) {
-			LOG.warn("Initializing secret service keychain access failed", e);
+		} catch (RuntimeException | ExceptionInInitializerError e) {
+			LOG.warn("Initializing secret service keychain access failed", e instanceof ExceptionInInitializerError ? e.getException() : e);
 			return false;
 		} catch (ExceptionInInitializerError e) {
 			LOG.warn("Initializing secret service keychain access failed", e.getException());
