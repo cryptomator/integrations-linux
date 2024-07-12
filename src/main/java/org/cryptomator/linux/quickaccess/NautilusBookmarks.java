@@ -1,6 +1,7 @@
 package org.cryptomator.linux.quickaccess;
 
 import org.cryptomator.integrations.common.CheckAvailability;
+import org.cryptomator.integrations.common.OperatingSystem;
 import org.cryptomator.integrations.common.Priority;
 import org.cryptomator.integrations.quickaccess.QuickAccessService;
 import org.cryptomator.integrations.quickaccess.QuickAccessServiceException;
@@ -17,6 +18,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 @Priority(100)
 @CheckAvailability
+@OperatingSystem(OperatingSystem.Value.LINUX)
 public class NautilusBookmarks implements QuickAccessService {
 
 	private static final int MAX_FILE_SIZE = 4096;
