@@ -38,6 +38,7 @@ public class FreedesktopAutoStartService implements AutoStartProvider {
 
 	private final Path autostartFile;
 	private final String content;
+	private final boolean hasExecValue;
 
 	public FreedesktopAutoStartService() {
 		var xdgConfigDirString = Objects.requireNonNullElse(System.getenv("XDG_CONFIG_HOME"), System.getProperty("user.home") + "/.config");
@@ -45,9 +46,10 @@ public class FreedesktopAutoStartService implements AutoStartProvider {
 
 		var execValue = System.getProperty(CMD_PROPERTY);
 		if (execValue == null) {
-			LOG.debug("Property {} not set, using command path", CMD_PROPERTY);
+			LOG.debug("JVM property {} not set, using command path", CMD_PROPERTY);
 			execValue = ProcessHandle.current().info().command().orElse("");
 		}
+		this.hasExecValue = execValue.isBlank();
 		this.content = CONTENT_TEMPLATE.formatted(execValue, this.getClass().getName());
 	}
 
@@ -77,7 +79,7 @@ public class FreedesktopAutoStartService implements AutoStartProvider {
 	@CheckAvailability
 	public boolean isSupported() {
 		//TODO: might need to research which Desktop Environments support this
-		return Files.exists(autostartFile.getParent());
+		return hasExecValue && Files.exists(autostartFile.getParent());
 	}
 
 }
