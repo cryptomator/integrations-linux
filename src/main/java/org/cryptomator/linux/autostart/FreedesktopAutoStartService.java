@@ -52,7 +52,7 @@ public class FreedesktopAutoStartService implements AutoStartProvider {
 	}
 
 	@Override
-	public void enable() throws ToggleAutoStartFailedException {
+	public synchronized void enable() throws ToggleAutoStartFailedException {
 		try {
 			Files.writeString(autostartFile, content, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
 		} catch (IOException e) {
@@ -61,7 +61,7 @@ public class FreedesktopAutoStartService implements AutoStartProvider {
 	}
 
 	@Override
-	public void disable() throws ToggleAutoStartFailedException {
+	public synchronized void disable() throws ToggleAutoStartFailedException {
 		try {
 			Files.deleteIfExists(autostartFile);
 		} catch (IOException e) {
@@ -70,7 +70,7 @@ public class FreedesktopAutoStartService implements AutoStartProvider {
 	}
 
 	@Override
-	public boolean isEnabled() {
+	public synchronized boolean isEnabled() {
 		return Files.exists(autostartFile);
 	}
 
