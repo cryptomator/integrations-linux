@@ -76,7 +76,7 @@ public class DolphinPlaces implements QuickAccessService {
 			//validate
 			xmlValidator.validate(new StreamSource(new StringReader(placesContent)));
 			// modify
-			int insertIndex = placesContent.lastIndexOf("</xbel>"); //cannot be -1 due to validation
+			int insertIndex = placesContent.lastIndexOf("</xbel"); //cannot be -1 due to validation; we do not match the end tag, since betweent tag name and closing bracket can be whitespaces
 			try (var writer = Files.newBufferedWriter(TMP_FILE, StandardCharsets.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
 				writer.write(placesContent, 0, insertIndex);
 				writer.newLine();
@@ -126,9 +126,9 @@ public class DolphinPlaces implements QuickAccessService {
 				int openingTagIndex = placesContentPart1.lastIndexOf("<bookmark href=");
 				var contentToWrite1 = placesContentPart1.substring(0, openingTagIndex).stripTrailing();
 
-				int closingTagIndex = placesContent.indexOf("</bookmark>", idIndex);
-				var part2Tmp = placesContent.substring(closingTagIndex + "</bookmark>".length()).split("\\v*", 2); //removing leading vertical whitespaces
-				var contentToWrite2 = part2Tmp.length == 1 ? part2Tmp[0] : part2Tmp[1];
+				int closingTagEndIndex = placesContent.indexOf('>', placesContent.indexOf("</bookmark", idIndex));
+				var part2Tmp = placesContent.substring(closingTagEndIndex + 1).split("\\v+", 2); //removing leading vertical whitespaces, but no indentation
+				var contentToWrite2 = part2Tmp[part2Tmp.length - 1];
 
 				try (var writer = Files.newBufferedWriter(TMP_FILE, StandardCharsets.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
 					writer.write(contentToWrite1);
