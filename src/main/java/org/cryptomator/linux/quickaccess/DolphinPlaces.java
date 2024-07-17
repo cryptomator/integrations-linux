@@ -43,7 +43,7 @@ public class DolphinPlaces implements QuickAccessService {
 			 <title>%s</title>
 			 <info>
 			  <metadata owner="http://freedesktop.org">
-			   <bookmark:icon name="drive-harddisk"/>
+			   <bookmark:icon name="drive-harddisk-encrypted"/>
 			  </metadata>
 			  <metadata owner="https://cryptomator.org">
 			  	<id>%s</id>
