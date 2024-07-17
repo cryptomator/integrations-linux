@@ -20,6 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
@@ -122,9 +123,8 @@ public class DolphinPlaces implements QuickAccessService {
 				//validate
 				xmlValidator.validate(new StreamSource(new StringReader(placesContent)));
 				//modify
-				var placesContentPart1 = placesContent.substring(0, idIndex);
-				int openingTagIndex = placesContentPart1.lastIndexOf("<bookmark href=");
-				var contentToWrite1 = placesContentPart1.substring(0, openingTagIndex).stripTrailing();
+				int openingTagIndex = indexOfEntryOpeningTag(placesContent, idIndex);
+				var contentToWrite1 = placesContent.substring(0, openingTagIndex).stripTrailing();
 
 				int closingTagEndIndex = placesContent.indexOf('>', placesContent.indexOf("</bookmark", idIndex));
 				var part2Tmp = placesContent.substring(closingTagEndIndex + 1).split("\\v+", 2); //removing leading vertical whitespaces, but no indentation
@@ -143,6 +143,17 @@ public class DolphinPlaces implements QuickAccessService {
 			} finally {
 				MODIFY_LOCK.unlock();
 			}
+		}
+
+		private int indexOfEntryOpeningTag(String placesContent, int idIndex) {
+			var xmlWhitespaceChars = List.of(' ', '\t', '\n');
+			for (char c : xmlWhitespaceChars) {
+				int idx = placesContent.lastIndexOf("<bookmark" + c, idIndex);
+				if (idx != -1) {
+					return idx;
+				}
+			}
+			throw new IllegalStateException("File " + PLACES_FILE + " is valid xbel file, but does not contain opening bookmark tag.");
 		}
 	}
 
