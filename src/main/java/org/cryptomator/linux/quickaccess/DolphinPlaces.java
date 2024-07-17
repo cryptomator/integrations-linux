@@ -23,7 +23,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Implemenation of the {@link QuickAccessService} for KDE desktop environments using Dolphin file browser.
@@ -36,7 +36,7 @@ public class DolphinPlaces implements QuickAccessService {
 	private static final int MAX_FILE_SIZE = 1 << 15; //xml is quite verbose
 	private static final Path PLACES_FILE = Path.of(System.getProperty("user.home"), ".local/share/user-places.xbel");
 	private static final Path TMP_FILE = PLACES_FILE.resolveSibling("user-places.xbel.cryptomator.tmp");
-	private static final Lock MODIFY_LOCK = new ReentrantReadWriteLock().writeLock();
+	private static final Lock MODIFY_LOCK = new ReentrantLock();
 	private static final String ENTRY_TEMPLATE = """
 			<bookmark href="%s">
 			 <title>%s</title>
