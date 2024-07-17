@@ -1,7 +1,9 @@
+import org.cryptomator.integrations.autostart.AutoStartProvider;
 import org.cryptomator.integrations.keychain.KeychainAccessProvider;
 import org.cryptomator.integrations.quickaccess.QuickAccessService;
 import org.cryptomator.integrations.revealpath.RevealPathService;
 import org.cryptomator.integrations.tray.TrayMenuController;
+import org.cryptomator.linux.autostart.FreedesktopAutoStartService;
 import org.cryptomator.linux.keychain.KDEWalletKeychainAccess;
 import org.cryptomator.linux.keychain.SecretServiceKeychainAccess;
 import org.cryptomator.linux.quickaccess.NautilusBookmarks;
@@ -16,6 +18,7 @@ module org.cryptomator.integrations.linux {
 	requires org.purejava.kwallet;
 	requires de.swiesend.secretservice;
 
+	provides AutoStartProvider with FreedesktopAutoStartService;
 	provides KeychainAccessProvider with SecretServiceKeychainAccess, KDEWalletKeychainAccess;
 	provides RevealPathService with DBusSendRevealPathService;
 	provides TrayMenuController with AppindicatorTrayMenuController;
