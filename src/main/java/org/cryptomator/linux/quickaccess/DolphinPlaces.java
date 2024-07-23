@@ -127,7 +127,7 @@ public class DolphinPlaces implements QuickAccessService {
 				var contentToWrite1 = placesContent.substring(0, openingTagIndex).stripTrailing();
 
 				int closingTagEndIndex = placesContent.indexOf('>', placesContent.indexOf("</bookmark", idIndex));
-				var part2Tmp = placesContent.substring(closingTagEndIndex + 1).split("\\v+", 2); //removing leading vertical whitespaces, but no indentation
+				var part2Tmp = placesContent.substring(closingTagEndIndex + 1).split("\\A\\v+", 2); //removing leading vertical whitespaces, but no indentation
 				var contentToWrite2 = part2Tmp[part2Tmp.length - 1];
 
 				try (var writer = Files.newBufferedWriter(TMP_FILE, StandardCharsets.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
