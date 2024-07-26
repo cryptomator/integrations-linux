@@ -52,13 +52,13 @@ public class DolphinPlaces implements QuickAccessService {
 			</bookmark>""";
 
 
-	private static final Validator xmlValidator;
+	private static final Validator XML_VALIDATOR;
 
 	static {
 		SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 		try (var schemaDefinition = DolphinPlaces.class.getResourceAsStream("/xbel-1.0.xsd")) {
 			Source schemaFile = new StreamSource(schemaDefinition);
-			xmlValidator = factory.newSchema(schemaFile).newValidator();
+			XML_VALIDATOR = factory.newSchema(schemaFile).newValidator();
 		} catch (IOException | SAXException e) {
 			throw new IllegalStateException("Failed to load included XBEL schema definition file.", e);
 		}
@@ -75,7 +75,7 @@ public class DolphinPlaces implements QuickAccessService {
 			}
 			var placesContent = Files.readString(PLACES_FILE);
 			//validate
-			xmlValidator.validate(new StreamSource(new StringReader(placesContent)));
+			XML_VALIDATOR.validate(new StreamSource(new StringReader(placesContent)));
 			// modify
 			int insertIndex = placesContent.lastIndexOf("</xbel"); //cannot be -1 due to validation; we do not match the end tag, since betweent tag name and closing bracket can be whitespaces
 			try (var writer = Files.newBufferedWriter(TMP_FILE, StandardCharsets.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
@@ -121,7 +121,7 @@ public class DolphinPlaces implements QuickAccessService {
 					return; //we assume someone has removed our entry
 				}
 				//validate
-				xmlValidator.validate(new StreamSource(new StringReader(placesContent)));
+				XML_VALIDATOR.validate(new StreamSource(new StringReader(placesContent)));
 				//modify
 				int openingTagIndex = indexOfEntryOpeningTag(placesContent, idIndex);
 				var contentToWrite1 = placesContent.substring(0, openingTagIndex).stripTrailing();
