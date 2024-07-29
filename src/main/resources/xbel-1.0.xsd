@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    This is the XML Bookmarks Exchange Language, version 1.0.  It
+     should be used with the formal public identifier:
+    
+        +//IDN python.org//DTD XML Bookmark Exchange Language 1.0//EN//XML
+    
+     One valid system identifier at which this DTD will remain
+     available is:
+    
+        http://pyxml.sourceforge.net/topics/dtds/xbel-1.0.dtd
+    
+     More information on the DTD, including reference
+     documentation, is available at:
+    
+        http://www.python.org/topics/xml/xbel/
+    
+    Attributes which take date/time values should encode the value
+    according to the W3C NOTE on date/time formats:
+    
+        http://www.w3.org/TR/NOTE-datetime
+-->
+<!--
+    Customization entities.  Define these before "including" this DTD
+    to create "subclassed" DTDs.
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+    <xs:attributeGroup name="node.att">
+        <xs:attribute name="id" type="xs:ID"/>
+        <xs:attribute name="added"/>
+    </xs:attributeGroup>
+    <xs:attributeGroup name="url.att">
+        <xs:attribute name="href" use="required"/>
+        <xs:attribute name="visited"/>
+        <xs:attribute name="modified"/>
+    </xs:attributeGroup>
+    <xs:element name="nodes.mix" abstract="true"/>
+    <xs:element name="xbel">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element minOccurs="0" ref="title"/>
+                <xs:element minOccurs="0" ref="info"/>
+                <xs:element minOccurs="0" ref="desc"/>
+                <xs:element minOccurs="0" maxOccurs="unbounded" ref="nodes.mix"/>
+            </xs:sequence>
+            <xs:attributeGroup ref="xbel.attlist"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:attributeGroup name="xbel.attlist">
+        <xs:attributeGroup ref="node.att"/>
+        <xs:attribute name="version" default="1.0">
+            <xs:simpleType>
+                <xs:restriction base="xs:string">
+                    <xs:enumeration value="1.0"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>
+    </xs:attributeGroup>
+    <xs:element name="title" type="xs:string"/>
+    <!-- =================== Info ====================================== -->
+    <xs:element name="info">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs="unbounded" ref="metadata"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="metadata">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:any maxOccurs="unbounded" minOccurs="0" processContents="lax"/>
+            </xs:sequence>
+            <xs:attributeGroup ref="metadata.attlist"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:attributeGroup name="metadata.attlist">
+        <xs:attribute name="owner" use="required"/>
+    </xs:attributeGroup>
+    <!-- =================== Folder ==================================== -->
+    <xs:element name="folder" substitutionGroup="nodes.mix">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element minOccurs="0" ref="title"/>
+                <xs:element minOccurs="0" ref="info"/>
+                <xs:element minOccurs="0" ref="desc"/>
+                <xs:element minOccurs="0" maxOccurs="unbounded" ref="nodes.mix"/>
+            </xs:sequence>
+            <xs:attributeGroup ref="folder.attlist"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:attributeGroup name="folder.attlist">
+        <xs:attributeGroup ref="node.att"/>
+        <xs:attribute name="folded" default="yes">
+            <xs:simpleType>
+                <xs:restriction base="xs:token">
+                    <xs:enumeration value="yes"/>
+                    <xs:enumeration value="no"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>
+    </xs:attributeGroup>
+    <!-- =================== Bookmark ================================== -->
+    <xs:element name="bookmark" substitutionGroup="nodes.mix">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element minOccurs="0" ref="title"/>
+                <xs:element minOccurs="0" ref="info"/>
+                <xs:element minOccurs="0" ref="desc"/>
+            </xs:sequence>
+            <xs:attributeGroup ref="bookmark.attlist"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:attributeGroup name="bookmark.attlist">
+        <xs:attributeGroup ref="node.att"/>
+        <xs:attributeGroup ref="url.att"/>
+    </xs:attributeGroup>
+    <xs:element name="desc" type="xs:string"/>
+    <!-- =================== Separator ================================= -->
+    <xs:element name="separator" substitutionGroup="nodes.mix">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:any processContents="lax"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <!-- =================== Alias ===================================== -->
+    <!--
+        <alias> elements correspond to Netscape bookmark aliases.  The
+        required "ref" attribute must refer to a <bookmark> or <folder>
+        element.  Note that MSIE aliases can refer to folders, so that is
+        supported in XBEL.  Applications must be careful about traversing
+        aliases to folders to avoid improper recursion through circular
+        data structures.
+    -->
+    <xs:element name="alias" substitutionGroup="nodes.mix">
+        <xs:complexType>
+            <xs:attributeGroup ref="alias.attlist"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:attributeGroup name="alias.attlist">
+        <xs:attribute name="ref" use="required" type="xs:IDREF"/>
+    </xs:attributeGroup>
+</xs:schema>
