@@ -40,13 +40,13 @@ public class DolphinPlaces implements QuickAccessService {
 	private static final Path TMP_FILE = Path.of(System.getProperty("java.io.tmpdir"), "user-places.xbel.cryptomator.tmp");
 	private static final Lock MODIFY_LOCK = new ReentrantLock();
 	private static final String ENTRY_TEMPLATE = """
-			<bookmark href="%s">
+			<bookmark href=\"%s\">
 			 <title>%s</title>
 			 <info>
-			  <metadata owner="http://freedesktop.org">
+			  <metadata owner=\"http://freedesktop.org\">
 			   <bookmark:icon name="drive-harddisk-encrypted"/>
 			  </metadata>
-			  <metadata owner="https://cryptomator.org">
+			  <metadata owner=\"https://cryptomator.org\">
 			  	<id>%s</id>
 			  </metadata>
 			 </info>
