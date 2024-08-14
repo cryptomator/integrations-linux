@@ -49,7 +49,7 @@ public class FreedesktopAutoStartService implements AutoStartProvider {
 			LOG.debug("JVM property {} not set, using command path", CMD_PROPERTY);
 			execValue = ProcessHandle.current().info().command().orElse("");
 		}
-		this.hasExecValue = execValue.isBlank();
+		this.hasExecValue = !execValue.isBlank();
 		this.content = CONTENT_TEMPLATE.formatted(execValue, this.getClass().getName());
 	}
 
