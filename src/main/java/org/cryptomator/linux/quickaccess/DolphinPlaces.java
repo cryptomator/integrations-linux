@@ -30,6 +30,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * Implemenation of the {@link QuickAccessService} for KDE desktop environments using Dolphin file browser.
  */
 @DisplayName("KDE Dolphin Places")
+@CheckAvailability
 @OperatingSystem(OperatingSystem.Value.LINUX)
 @Priority(90)
 public class DolphinPlaces implements QuickAccessService {

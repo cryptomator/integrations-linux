@@ -26,4 +26,5 @@ module org.cryptomator.integrations.linux {
 	provides QuickAccessService with NautilusBookmarks, DolphinPlaces;
 
 	opens org.cryptomator.linux.tray to org.cryptomator.integrations.api;
+	opens org.cryptomator.linux.quickaccess to org.cryptomator.integrations.api;
 }
