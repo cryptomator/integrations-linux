@@ -44,11 +44,7 @@ public class FreedesktopAutoStartService implements AutoStartProvider {
 		var xdgConfigDirString = Objects.requireNonNullElse(System.getenv("XDG_CONFIG_HOME"), System.getProperty("user.home") + "/.config");
 		this.autostartFile = Path.of(xdgConfigDirString, "autostart", AUTOSTART_FILENAME);
 
-		var execValue = System.getProperty(CMD_PROPERTY);
-		if (execValue == null) {
-			LOG.debug("JVM property {} not set, using command path", CMD_PROPERTY);
-			execValue = ProcessHandle.current().info().command().orElse("");
-		}
+		var execValue = System.getProperty(CMD_PROPERTY,"");
 		this.hasExecValue = !execValue.isBlank();
 		this.content = CONTENT_TEMPLATE.formatted(execValue, this.getClass().getName());
 	}
