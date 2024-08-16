@@ -11,7 +11,6 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Arrays;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -60,20 +59,10 @@ public class DBusSendRevealPathService implements RevealPathService {
 
 	@Override
 	public boolean isSupported() {
-		CountDownLatch waitBarrier = new CountDownLatch(2);
-		ProcessBuilder dbusSendExistsBuilder = new ProcessBuilder().command("test", " `command -v dbus-send`");
-		ProcessBuilder fileManager1ExistsBuilder = createFileManager1Check();
-
 		try {
-			var dbusSendExists = dbusSendExistsBuilder.start();
-			dbusSendExists.onExit().thenRun(waitBarrier::countDown);
-			var fileManager1Exists = fileManager1ExistsBuilder.start();
-			fileManager1Exists.onExit().thenRun(waitBarrier::countDown);
-
-			if (waitBarrier.await(TIMEOUT_THRESHOLD, TimeUnit.MILLISECONDS)) {
-				if (dbusSendExists.exitValue() == 0 && fileManager1Exists.exitValue() == 0) {
-					return parseOutputForFileManagerInterface(fileManager1Exists);
-				}
+			var fileManager1Exists = createFileManager1Check().start();
+			if (fileManager1Exists.waitFor(TIMEOUT_THRESHOLD, TimeUnit.MILLISECONDS) && fileManager1Exists.exitValue() == 0) {
+				return parseOutputForFileManagerInterface(fileManager1Exists);
 			}
 		} catch (IOException | InterruptedException e) {
 			//NO-OP
@@ -90,7 +79,7 @@ public class DBusSendRevealPathService implements RevealPathService {
 	 * @throws IOException if the Inputer reader on the process output cannot be created
 	 */
 	private boolean parseOutputForFileManagerInterface(Process fileManager1Process) throws IOException {
-		if( fileManager1Process.isAlive()) {
+		if (fileManager1Process.isAlive()) {
 			throw new IllegalArgumentException("Process " + fileManager1Process + " must be terminated to read output.");
 		}
 		try (var reader = fileManager1Process.inputReader(StandardCharsets.UTF_8)) {
