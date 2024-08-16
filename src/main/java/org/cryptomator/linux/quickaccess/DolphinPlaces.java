@@ -6,6 +6,7 @@ import org.cryptomator.integrations.common.OperatingSystem;
 import org.cryptomator.integrations.common.Priority;
 import org.cryptomator.integrations.quickaccess.QuickAccessService;
 import org.cryptomator.integrations.quickaccess.QuickAccessServiceException;
+import org.cryptomator.linux.util.SupportUtil;
 import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;
@@ -160,14 +161,6 @@ public class DolphinPlaces implements QuickAccessService {
 
 	@CheckAvailability
 	public static boolean isSupported() {
-		try {
-			var nautilusExistsProc = new ProcessBuilder().command("test", "`command -v dolphin`").start();
-			if (nautilusExistsProc.waitFor(5000, TimeUnit.MILLISECONDS)) {
-				return nautilusExistsProc.exitValue() == 0;
-			}
-		} catch (IOException | InterruptedException e) {
-			//NO-OP
-		}
-		return false;
+		return SupportUtil.commandExists("dolphin");
 	}
 }
