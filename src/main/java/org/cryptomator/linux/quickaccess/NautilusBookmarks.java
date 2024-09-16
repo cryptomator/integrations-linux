@@ -6,7 +6,6 @@ import org.cryptomator.integrations.common.OperatingSystem;
 import org.cryptomator.integrations.common.Priority;
 import org.cryptomator.integrations.quickaccess.QuickAccessService;
 import org.cryptomator.integrations.quickaccess.QuickAccessServiceException;
-import org.cryptomator.linux.util.SupportUtil;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -14,7 +13,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -85,6 +83,6 @@ public class NautilusBookmarks implements QuickAccessService {
 
 	@CheckAvailability
 	public static boolean isSupported() {
-		return SupportUtil.commandExists("nautilus");
+		return Files.exists(BOOKMARKS_FILE);
 	}
 }

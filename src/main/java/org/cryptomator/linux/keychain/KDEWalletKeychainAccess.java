@@ -48,7 +48,7 @@ public class KDEWalletKeychainAccess implements KeychainAccessProvider {
 	}
 
 	@Override
-	public void storePassphrase(String key, String displayName, CharSequence passphrase) throws KeychainAccessException {
+	public void storePassphrase(String key, String displayName, CharSequence passphrase, boolean ignored) throws KeychainAccessException {
 		CheckUtil.checkState(wallet.isPresent(), "Keychain not supported.");
 		wallet.get().storePassphrase(key, passphrase);
 	}

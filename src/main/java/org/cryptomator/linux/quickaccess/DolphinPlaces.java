@@ -6,7 +6,6 @@ import org.cryptomator.integrations.common.OperatingSystem;
 import org.cryptomator.integrations.common.Priority;
 import org.cryptomator.integrations.quickaccess.QuickAccessService;
 import org.cryptomator.integrations.quickaccess.QuickAccessServiceException;
-import org.cryptomator.linux.util.SupportUtil;
 import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;
@@ -23,7 +22,6 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -161,6 +159,6 @@ public class DolphinPlaces implements QuickAccessService {
 
 	@CheckAvailability
 	public static boolean isSupported() {
-		return SupportUtil.commandExists("dolphin");
+		return Files.exists(PLACES_FILE);
 	}
 }
