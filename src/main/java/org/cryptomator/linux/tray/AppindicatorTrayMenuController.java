@@ -102,6 +102,7 @@ public class AppindicatorTrayMenuController implements TrayMenuController {
 							GCallback.allocate(new ActionItemCallback(a), ARENA),
 							menu,
 							0);
+					Gtk.widgetSetSensitive(gtkMenuItem, a.enabled());
 					Gtk.menuShellAppend(menu, gtkMenuItem);
 				}
 				case SeparatorItem _ -> {

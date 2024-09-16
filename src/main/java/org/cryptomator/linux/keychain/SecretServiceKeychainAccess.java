@@ -16,7 +16,7 @@ import java.util.Map;
 @OperatingSystem(OperatingSystem.Value.LINUX)
 public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 
-	private static Logger LOG = LoggerFactory.getLogger(SecretServiceKeychainAccess.class);
+	private static final Logger LOG = LoggerFactory.getLogger(SecretServiceKeychainAccess.class);
 
 	private final String LABEL_FOR_SECRET_IN_KEYRING = "Cryptomator";
 
@@ -29,8 +29,11 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 	public boolean isSupported() {
 		try {
 			return SimpleCollection.isAvailable();
-		} catch (ExceptionInInitializerError e) {
-			LOG.warn("Initializing secret service keychain access failed", e.getException());
+		} catch (RuntimeException e) {
+			LOG.warn("Initializing secret service keychain access failed", e);
+			return false;
+		} catch (ExceptionInInitializerError err) {
+			LOG.warn("Initializing secret service keychain access failed", err.getException());
 			return false;
 		}
 	}
@@ -45,7 +48,7 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 	}
 
 	@Override
-	public void storePassphrase(String key, String displayName, CharSequence passphrase) throws KeychainAccessException {
+	public void storePassphrase(String key, String displayName, CharSequence passphrase, boolean ignored) throws KeychainAccessException {
 		try (SimpleCollection keyring = new SimpleCollection()) {
 			List<String> list = keyring.getItems(createAttributes(key));
 			if (list == null || list.isEmpty()) {
