@@ -29,7 +29,8 @@ public class NautilusBookmarks implements QuickAccessService {
 
 	@Override
 	public QuickAccessService.QuickAccessEntry add(Path target, String displayName) throws QuickAccessServiceException {
-		String entryLine = "file://" + target.toAbsolutePath() + " " + displayName;
+		var uriPath = target.toAbsolutePath().toString().replace(" ", "%20");
+		String entryLine = "file://" + uriPath + " " + displayName;
 		try {
 			BOOKMARKS_LOCK.lock();
 			if (Files.size(BOOKMARKS_FILE) > MAX_FILE_SIZE) {
