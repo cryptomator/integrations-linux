@@ -16,6 +16,7 @@ import javax.xml.validation.Validator;
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -86,7 +87,7 @@ public class DolphinPlaces implements QuickAccessService {
 				writer.write(placesContent, insertIndex, placesContent.length() - insertIndex);
 			}
 			// save
-			Files.move(TMP_FILE, PLACES_FILE, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+			persistTmpFile();
 			return new DolphinPlacesEntry(id);
 		} catch (SAXException | IOException e) {
 			throw new QuickAccessServiceException("Adding entry to KDE places file failed.", e);
@@ -136,7 +137,7 @@ public class DolphinPlaces implements QuickAccessService {
 					writer.write(contentToWrite2);
 				}
 				// save
-				Files.move(TMP_FILE, PLACES_FILE, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+				persistTmpFile();
 				isRemoved = true;
 			} catch (IOException | SAXException e) {
 				throw new QuickAccessServiceException("Removing entry from KDE places file failed.", e);
@@ -154,6 +155,14 @@ public class DolphinPlaces implements QuickAccessService {
 				}
 			}
 			throw new IllegalStateException("File " + PLACES_FILE + " is valid xbel file, but does not contain opening bookmark tag.");
+		}
+	}
+
+	static void persistTmpFile() throws IOException {
+		try {
+			Files.move(TMP_FILE, PLACES_FILE, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+		} catch (AtomicMoveNotSupportedException e) {
+			Files.move(TMP_FILE, PLACES_FILE, StandardCopyOption.REPLACE_EXISTING);
 		}
 	}
 

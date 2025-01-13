@@ -9,6 +9,7 @@ import org.cryptomator.integrations.quickaccess.QuickAccessServiceException;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -40,7 +41,8 @@ public class NautilusBookmarks implements QuickAccessService {
 			var entries = Files.readAllLines(BOOKMARKS_FILE, StandardCharsets.UTF_8);
 			entries.add(entryLine);
 			Files.write(TMP_FILE, entries, StandardCharsets.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-			Files.move(TMP_FILE, BOOKMARKS_FILE, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+
+			persistTmpFile();
 			return new NautilusQuickAccessEntry(entryLine);
 		} catch (IOException e) {
 			throw new QuickAccessServiceException("Adding entry to Nautilus bookmarks file failed.", e);
@@ -71,7 +73,7 @@ public class NautilusBookmarks implements QuickAccessService {
 				var entries = Files.readAllLines(BOOKMARKS_FILE);
 				if (entries.remove(line)) {
 					Files.write(TMP_FILE, entries, StandardCharsets.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-					Files.move(TMP_FILE, BOOKMARKS_FILE, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+					persistTmpFile();
 				}
 				isRemoved = true;
 			} catch (IOException e) {
@@ -79,6 +81,14 @@ public class NautilusBookmarks implements QuickAccessService {
 			} finally {
 				BOOKMARKS_LOCK.unlock();
 			}
+		}
+	}
+
+	static void persistTmpFile() throws IOException {
+		try {
+			Files.move(TMP_FILE, BOOKMARKS_FILE, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+		} catch (AtomicMoveNotSupportedException e) {
+			Files.move(TMP_FILE, BOOKMARKS_FILE, StandardCopyOption.REPLACE_EXISTING);
 		}
 	}
 
