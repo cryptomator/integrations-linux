@@ -27,7 +27,7 @@ abstract class FileConfiguredQuickAccess implements QuickAccessService {
 	FileConfiguredQuickAccess(Path configFile, int maxFileSize) {
 		this.configFile = configFile;
 		this.maxFileSize = maxFileSize;
-		this.tmpFile = configFile.resolve("." + configFile.getFileName() + ".cryptomator.tmp");
+		this.tmpFile = configFile.resolveSibling("." + configFile.getFileName() + ".cryptomator.tmp");
 		Runtime.getRuntime().addShutdownHook(new Thread(this::cleanup));
 	}
 
@@ -78,7 +78,7 @@ abstract class FileConfiguredQuickAccess implements QuickAccessService {
 	}
 
 	private String readConfig() throws IOException {
-		return Files.readString(tmpFile, StandardCharsets.UTF_8);
+		return Files.readString(configFile, StandardCharsets.UTF_8);
 	}
 
 	private void persistConfig(String newConfig) throws IOException {

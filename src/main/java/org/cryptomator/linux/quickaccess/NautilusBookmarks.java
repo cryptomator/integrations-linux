@@ -32,7 +32,7 @@ public class NautilusBookmarks extends FileConfiguredQuickAccess implements Quic
 		String entryLine = "file://" + uriPath + " " + displayName;
 		var entry = new NautilusQuickAccessEntry(entryLine);
 		var adjustedConfig = config.stripTrailing() +
-				"/n" +
+				"\n" +
 				entryLine;
 		return new EntryAndConfig(entry, adjustedConfig);
 	}
