@@ -7,88 +7,50 @@ import org.cryptomator.integrations.common.Priority;
 import org.cryptomator.integrations.quickaccess.QuickAccessService;
 import org.cryptomator.integrations.quickaccess.QuickAccessServiceException;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Priority(100)
 @CheckAvailability
 @OperatingSystem(OperatingSystem.Value.LINUX)
 @DisplayName("GNOME Nautilus Bookmarks")
-public class NautilusBookmarks implements QuickAccessService {
+public class NautilusBookmarks extends FileConfiguredQuickAccess implements QuickAccessService {
 
 	private static final int MAX_FILE_SIZE = 4096;
 	private static final Path BOOKMARKS_FILE = Path.of(System.getProperty("user.home"), ".config/gtk-3.0/bookmarks");
-	private static final Path TMP_FILE = BOOKMARKS_FILE.resolveSibling("bookmarks.cryptomator.tmp");
-	private static final Lock BOOKMARKS_LOCK = new ReentrantReadWriteLock().writeLock();
 
-	@Override
-	public QuickAccessService.QuickAccessEntry add(Path target, String displayName) throws QuickAccessServiceException {
-		var uriPath = target.toAbsolutePath().toString().replace(" ", "%20");
-		String entryLine = "file://" + uriPath + " " + displayName;
-		try {
-			BOOKMARKS_LOCK.lock();
-			if (Files.size(BOOKMARKS_FILE) > MAX_FILE_SIZE) {
-				throw new IOException("File %s exceeds size of %d bytes".formatted(BOOKMARKS_FILE, MAX_FILE_SIZE));
-			}
-			//by reading all lines, we ensure that each line is terminated with EOL
-			var entries = Files.readAllLines(BOOKMARKS_FILE, StandardCharsets.UTF_8);
-			entries.add(entryLine);
-			Files.write(TMP_FILE, entries, StandardCharsets.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-
-			persistTmpFile();
-			return new NautilusQuickAccessEntry(entryLine);
-		} catch (IOException e) {
-			throw new QuickAccessServiceException("Adding entry to Nautilus bookmarks file failed.", e);
-		} finally {
-			BOOKMARKS_LOCK.unlock();
-		}
+	//SPI constructor
+	public NautilusBookmarks() {
+		super(BOOKMARKS_FILE, MAX_FILE_SIZE);
 	}
 
-	static class NautilusQuickAccessEntry implements QuickAccessEntry {
+	@Override
+	EntryAndConfig addEntryToConfig(String config, Path target, String displayName) throws QuickAccessServiceException {
+		var uriPath = target.toAbsolutePath().toString().replace(" ", "%20");
+		String entryLine = "file://" + uriPath + " " + displayName;
+		var entry = new NautilusQuickAccessEntry(entryLine);
+		var adjustedConfig = config.stripTrailing() +
+				"/n" +
+				entryLine;
+		return new EntryAndConfig(entry, adjustedConfig);
+	}
+
+	class NautilusQuickAccessEntry extends FileConfiguredQuickAccessEntry implements QuickAccessEntry {
 
 		private final String line;
-		private volatile boolean isRemoved = false;
 
 		NautilusQuickAccessEntry(String line) {
 			this.line = line;
 		}
 
 		@Override
-		public void remove() throws QuickAccessServiceException {
-			try {
-				BOOKMARKS_LOCK.lock();
-				if (isRemoved) {
-					return;
-				}
-				if (Files.size(BOOKMARKS_FILE) > MAX_FILE_SIZE) {
-					throw new IOException("File %s exceeds size of %d bytes".formatted(BOOKMARKS_FILE, MAX_FILE_SIZE));
-				}
-				var entries = Files.readAllLines(BOOKMARKS_FILE);
-				if (entries.remove(line)) {
-					Files.write(TMP_FILE, entries, StandardCharsets.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-					persistTmpFile();
-				}
-				isRemoved = true;
-			} catch (IOException e) {
-				throw new QuickAccessServiceException("Removing entry from Nautilus bookmarks file failed", e);
-			} finally {
-				BOOKMARKS_LOCK.unlock();
-			}
-		}
-	}
-
-	static void persistTmpFile() throws IOException {
-		try {
-			Files.move(TMP_FILE, BOOKMARKS_FILE, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-		} catch (AtomicMoveNotSupportedException e) {
-			Files.move(TMP_FILE, BOOKMARKS_FILE, StandardCopyOption.REPLACE_EXISTING);
+		public String removeEntryFromConfig(String config) throws QuickAccessServiceException {
+			return config.lines() //
+					.map(l -> l.equals(line) ? null : l) //
+					.filter(Objects::nonNull) //
+					.collect(Collectors.joining("\n"));
 		}
 	}
 
