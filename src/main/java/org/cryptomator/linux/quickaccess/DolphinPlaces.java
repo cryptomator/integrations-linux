@@ -34,7 +34,7 @@ import java.util.concurrent.locks.ReentrantLock;
 @Priority(90)
 public class DolphinPlaces implements QuickAccessService {
 
-	private static final int MAX_FILE_SIZE = 1 << 15; //xml is quite verbose
+	private static final int MAX_FILE_SIZE = 1 << 20; //xml is quite verbose
 	private static final Path PLACES_FILE = Path.of(System.getProperty("user.home"), ".local/share/user-places.xbel");
 	private static final Path TMP_FILE = Path.of(System.getProperty("java.io.tmpdir"), "user-places.xbel.cryptomator.tmp");
 	private static final Lock MODIFY_LOCK = new ReentrantLock();
