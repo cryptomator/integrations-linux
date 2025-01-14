@@ -15,15 +15,10 @@ import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 import java.io.IOException;
 import java.io.StringReader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Implemenation of the {@link QuickAccessService} for KDE desktop environments using Dolphin file browser.
@@ -32,12 +27,10 @@ import java.util.concurrent.locks.ReentrantLock;
 @CheckAvailability
 @OperatingSystem(OperatingSystem.Value.LINUX)
 @Priority(90)
-public class DolphinPlaces implements QuickAccessService {
+public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAccessService {
 
-	private static final int MAX_FILE_SIZE = 1 << 20; //xml is quite verbose
+	private static final int MAX_FILE_SIZE = 1 << 20; //1MiB, xml is quite verbose
 	private static final Path PLACES_FILE = Path.of(System.getProperty("user.home"), ".local/share/user-places.xbel");
-	private static final Path TMP_FILE = Path.of(System.getProperty("java.io.tmpdir"), "user-places.xbel.cryptomator.tmp");
-	private static final Lock MODIFY_LOCK = new ReentrantLock();
 	private static final String ENTRY_TEMPLATE = """
 			<bookmark href=\"%s\">
 			 <title>%s</title>
@@ -51,7 +44,6 @@ public class DolphinPlaces implements QuickAccessService {
 			 </info>
 			</bookmark>""";
 
-
 	private static final Validator XML_VALIDATOR;
 
 	static {
@@ -64,96 +56,82 @@ public class DolphinPlaces implements QuickAccessService {
 		}
 	}
 
+	//SPI constructor
+	public DolphinPlaces() {
+		super(PLACES_FILE, MAX_FILE_SIZE);
+	}
 
 	@Override
-	public QuickAccessService.QuickAccessEntry add(Path target, String displayName) throws QuickAccessServiceException {
-		String id = UUID.randomUUID().toString();
+	EntryAndConfig addEntryToConfig(String config, Path target, String displayName) throws QuickAccessServiceException {
 		try {
-			MODIFY_LOCK.lock();
-			if (Files.size(PLACES_FILE) > MAX_FILE_SIZE) {
-				throw new IOException("File %s exceeds size of %d bytes".formatted(PLACES_FILE, MAX_FILE_SIZE));
-			}
-			var placesContent = Files.readString(PLACES_FILE);
+			String id = UUID.randomUUID().toString();
 			//validate
-			XML_VALIDATOR.validate(new StreamSource(new StringReader(placesContent)));
+			XML_VALIDATOR.validate(new StreamSource(new StringReader(config)));
 			// modify
-			int insertIndex = placesContent.lastIndexOf("</xbel"); //cannot be -1 due to validation; we do not match the end tag, since betweent tag name and closing bracket can be whitespaces
-			try (var writer = Files.newBufferedWriter(TMP_FILE, StandardCharsets.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
-				writer.write(placesContent, 0, insertIndex);
-				writer.newLine();
-				writer.write(ENTRY_TEMPLATE.formatted(target.toUri(), displayName, id).indent(1));
-				writer.newLine();
-				writer.write(placesContent, insertIndex, placesContent.length() - insertIndex);
-			}
-			// save
-			Files.move(TMP_FILE, PLACES_FILE, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-			return new DolphinPlacesEntry(id);
+			int insertIndex = config.lastIndexOf("</xbel"); //cannot be -1 due to validation; we do not match the whole end tag, since between tag name and closing bracket can be whitespaces
+			var adjustedConfig = config.substring(0, insertIndex) //
+					+ "\n" //
+					+ ENTRY_TEMPLATE.formatted(target.toUri(), escapeXML(displayName), id).indent(1) //
+					+ "\n" //
+					+ config.substring(insertIndex);
+			return new EntryAndConfig(new DolphinPlacesEntry(id), adjustedConfig);
 		} catch (SAXException | IOException e) {
 			throw new QuickAccessServiceException("Adding entry to KDE places file failed.", e);
-		} finally {
-			MODIFY_LOCK.unlock();
 		}
 	}
 
-	private static class DolphinPlacesEntry implements QuickAccessEntry {
+	private String escapeXML(String s) {
+		return s.replace("&","&amp;") //
+				.replace("<","&lt;") //
+				.replace(">","&gt;");
+	}
+
+	private class DolphinPlacesEntry extends FileConfiguredQuickAccessEntry implements QuickAccessEntry {
 
 		private final String id;
-		private volatile boolean isRemoved = false;
 
 		DolphinPlacesEntry(String id) {
 			this.id = id;
 		}
 
 		@Override
-		public void remove() throws QuickAccessServiceException {
+		public String removeEntryFromConfig(String config) throws QuickAccessServiceException {
 			try {
-				MODIFY_LOCK.lock();
-				if (isRemoved) {
-					return;
-				}
-				if (Files.size(PLACES_FILE) > MAX_FILE_SIZE) {
-					throw new IOException("File %s exceeds size of %d bytes".formatted(PLACES_FILE, MAX_FILE_SIZE));
-				}
-				var placesContent = Files.readString(PLACES_FILE);
-				int idIndex = placesContent.lastIndexOf(id);
+				int idIndex = config.lastIndexOf(id);
 				if (idIndex == -1) {
-					isRemoved = true;
-					return; //we assume someone has removed our entry
+					return config; //assume someone has removed our entry, nothing to do
 				}
 				//validate
-				XML_VALIDATOR.validate(new StreamSource(new StringReader(placesContent)));
+				XML_VALIDATOR.validate(new StreamSource(new StringReader(config)));
 				//modify
-				int openingTagIndex = indexOfEntryOpeningTag(placesContent, idIndex);
-				var contentToWrite1 = placesContent.substring(0, openingTagIndex).stripTrailing();
+				int openingTagIndex = indexOfEntryOpeningTag(config, idIndex);
+				var contentToWrite1 = config.substring(0, openingTagIndex).stripTrailing();
 
-				int closingTagEndIndex = placesContent.indexOf('>', placesContent.indexOf("</bookmark", idIndex));
-				var part2Tmp = placesContent.substring(closingTagEndIndex + 1).split("\\A\\v+", 2); //removing leading vertical whitespaces, but no indentation
+				int closingTagEndIndex = config.indexOf('>', config.indexOf("</bookmark", idIndex));
+				var part2Tmp = config.substring(closingTagEndIndex + 1).split("\\A\\v+", 2); //removing leading vertical whitespaces, but no indentation
 				var contentToWrite2 = part2Tmp[part2Tmp.length - 1];
 
-				try (var writer = Files.newBufferedWriter(TMP_FILE, StandardCharsets.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
-					writer.write(contentToWrite1);
-					writer.newLine();
-					writer.write(contentToWrite2);
-				}
-				// save
-				Files.move(TMP_FILE, PLACES_FILE, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-				isRemoved = true;
-			} catch (IOException | SAXException e) {
+				return contentToWrite1 + "\n" + contentToWrite2;
+			} catch (IOException | SAXException | IllegalStateException e) {
 				throw new QuickAccessServiceException("Removing entry from KDE places file failed.", e);
-			} finally {
-				MODIFY_LOCK.unlock();
 			}
 		}
 
+		/**
+		 * Returns the start index (inclusive)  of the {@link DolphinPlaces#ENTRY_TEMPLATE} entry
+		 * @param placesContent the content of the XBEL places file
+		 * @param idIndex start index (inclusive) of the entrys id tag value
+		 * @return start index of the first bookmark tag, searching backwards from idIndex
+		 */
 		private int indexOfEntryOpeningTag(String placesContent, int idIndex) {
 			var xmlWhitespaceChars = List.of(' ', '\t', '\n');
 			for (char c : xmlWhitespaceChars) {
-				int idx = placesContent.lastIndexOf("<bookmark" + c, idIndex);
+				int idx = placesContent.lastIndexOf("<bookmark" + c, idIndex); //with the whitespace we ensure, that no tags starting with "bookmark" (e.g. bookmarkz) are selected
 				if (idx != -1) {
 					return idx;
 				}
 			}
-			throw new IllegalStateException("File " + PLACES_FILE + " is valid xbel file, but does not contain opening bookmark tag.");
+			throw new IllegalStateException("Found entry id " + id + " in " + PLACES_FILE + ", but it is not a child of <bookmark> tag.");
 		}
 	}
 
