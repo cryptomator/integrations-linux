@@ -71,13 +71,19 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 			int insertIndex = config.lastIndexOf("</xbel"); //cannot be -1 due to validation; we do not match the whole end tag, since between tag name and closing bracket can be whitespaces
 			var adjustedConfig = config.substring(0, insertIndex) //
 					+ "\n" //
-					+ ENTRY_TEMPLATE.formatted(target.toUri(), displayName, id).indent(1) //
+					+ ENTRY_TEMPLATE.formatted(target.toUri(), escapeXML(displayName), id).indent(1) //
 					+ "\n" //
 					+ config.substring(insertIndex);
 			return new EntryAndConfig(new DolphinPlacesEntry(id), adjustedConfig);
 		} catch (SAXException | IOException e) {
 			throw new QuickAccessServiceException("Adding entry to KDE places file failed.", e);
 		}
+	}
+
+	private String escapeXML(String s) {
+		return s.replace("&","&amp;") //
+				.replace("<","&lt;") //
+				.replace(">","&gt;");
 	}
 
 	private class DolphinPlacesEntry extends FileConfiguredQuickAccessEntry implements QuickAccessEntry {
