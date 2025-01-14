@@ -106,20 +106,26 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 				var contentToWrite2 = part2Tmp[part2Tmp.length - 1];
 
 				return contentToWrite1 + "\n" + contentToWrite2;
-			} catch (IOException | SAXException e) {
+			} catch (IOException | SAXException | IllegalStateException e) {
 				throw new QuickAccessServiceException("Removing entry from KDE places file failed.", e);
 			}
 		}
 
+		/**
+		 * Returns the start index (inclusive)  of the {@link DolphinPlaces#ENTRY_TEMPLATE} entry
+		 * @param placesContent the content of the XBEL places file
+		 * @param idIndex start index (inclusive) of the entrys id tag value
+		 * @return start index of the first bookmark tag, searching backwards from idIndex
+		 */
 		private int indexOfEntryOpeningTag(String placesContent, int idIndex) {
 			var xmlWhitespaceChars = List.of(' ', '\t', '\n');
 			for (char c : xmlWhitespaceChars) {
-				int idx = placesContent.lastIndexOf("<bookmark" + c, idIndex);
+				int idx = placesContent.lastIndexOf("<bookmark" + c, idIndex); //with the whitespace we ensure, that no tags starting with "bookmark" (e.g. bookmarkz) are selected
 				if (idx != -1) {
 					return idx;
 				}
 			}
-			throw new IllegalStateException("File " + PLACES_FILE + " is valid xbel file, but does not contain opening bookmark tag.");
+			throw new IllegalStateException("Found entry id " + id + " in " + PLACES_FILE + ", but it is not a child of <bookmark> tag.");
 		}
 	}
 
