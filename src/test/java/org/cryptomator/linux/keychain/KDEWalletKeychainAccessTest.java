@@ -3,7 +3,7 @@ package org.cryptomator.linux.keychain;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIf;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
@@ -15,15 +15,15 @@ import java.util.concurrent.TimeUnit;
  * Unit tests for KWallet access via DBUS.
  */
 @EnabledOnOs(OS.LINUX)
-@EnabledIf("osEnvironmentSuitable")
+@EnabledIfEnvironmentVariable(named = "DISPLAY", matches = ".*")
 public class KDEWalletKeychainAccessTest {
 
 	private static boolean isInstalled;
 
 	@BeforeAll
 	public static void checkSystemAndSetup() throws IOException {
-		ProcessBuilder dbusSend = new ProcessBuilder("dbus-send","--print-reply","--dest=org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus.ListNames");
-		ProcessBuilder grep = new ProcessBuilder("grep", "org.kde.kwallet");
+		ProcessBuilder dbusSend = new ProcessBuilder("dbus-send", "--print-reply", "--dest=org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus.ListActivatableNames");
+		ProcessBuilder grep = new ProcessBuilder("grep", "-q", "org.kde.kwallet");
 		try {
 			Process end = ProcessBuilder.startPipeline(List.of(dbusSend, grep)).get(1);
 			if (end.waitFor(1000, TimeUnit.MILLISECONDS)) {
@@ -41,10 +41,5 @@ public class KDEWalletKeychainAccessTest {
 	public void testIsSupported() {
 		KDEWalletKeychainAccess keychainAccess = new KDEWalletKeychainAccess();
 		Assertions.assertEquals(isInstalled, keychainAccess.isSupported());
-	}
-
-
-	private static boolean osEnvironmentSuitable() {
-		return System.getenv().containsKey("DISPLAY");
 	}
 }

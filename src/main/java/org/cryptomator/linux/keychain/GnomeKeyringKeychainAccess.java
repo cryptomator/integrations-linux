@@ -1,6 +1,7 @@
 package org.cryptomator.linux.keychain;
 
 import de.swiesend.secretservice.simple.SimpleCollection;
+import org.cryptomator.integrations.common.DisplayName;
 import org.cryptomator.integrations.common.OperatingSystem;
 import org.cryptomator.integrations.common.Priority;
 import org.cryptomator.integrations.keychain.KeychainAccessException;
@@ -14,21 +15,17 @@ import java.util.Map;
 
 @Priority(900)
 @OperatingSystem(OperatingSystem.Value.LINUX)
-public class SecretServiceKeychainAccess implements KeychainAccessProvider {
+@DisplayName("GNOME Keyring")
+public class GnomeKeyringKeychainAccess implements KeychainAccessProvider {
 
-	private static final Logger LOG = LoggerFactory.getLogger(SecretServiceKeychainAccess.class);
+	private static final Logger LOG = LoggerFactory.getLogger(GnomeKeyringKeychainAccess.class);
 
 	private final String LABEL_FOR_SECRET_IN_KEYRING = "Cryptomator";
 
 	@Override
-	public String displayName() {
-		return "Gnome Keyring";
-	}
-
-	@Override
 	public boolean isSupported() {
 		try {
-			return SimpleCollection.isAvailable();
+			return SimpleCollection.isGnomeKeyringAvailable();
 		} catch (RuntimeException e) {
 			LOG.warn("Initializing secret service keychain access failed", e);
 			return false;
@@ -48,7 +45,7 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 	}
 
 	@Override
-	public void storePassphrase(String key, String displayName, CharSequence passphrase, boolean ignored) throws KeychainAccessException {
+	public void storePassphrase(String key, String displayName, CharSequence passphrase) throws KeychainAccessException {
 		try (SimpleCollection keyring = new SimpleCollection()) {
 			List<String> list = keyring.getItems(createAttributes(key));
 			if (list == null || list.isEmpty()) {

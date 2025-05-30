@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.cryptomator</groupId>
 	<artifactId>integrations-linux</artifactId>
-	<version>1.5.3</version>
+	<version>1.6.0</version>
 
 	<name>integrations-linux</name>
 	<description>Provides optional Linux services used by Cryptomator</description>
@@ -36,28 +36,28 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.jdk.version>22</project.jdk.version>
+		<project.jdk.version>24</project.jdk.version>
 
 		<!-- runtime dependencies -->
 
-		<api.version>1.5.1</api.version>
+		<api.version>1.6.0</api.version>
 		<secret-service.version>2.0.1-alpha</secret-service.version>
 		<kdewallet.version>1.4.0</kdewallet.version>
 		<slf4j.version>2.0.17</slf4j.version>
 		<appindicator.version>1.4.2</appindicator.version>
 
 		<!-- test dependencies -->
-		<junit.version>5.12.0</junit.version>
+		<junit.version>5.12.2</junit.version>
 
 		<!-- build plugin dependencies -->
 		<mvn-compiler.version>3.14.0</mvn-compiler.version>
-		<mvn-surefire.version>3.5.2</mvn-surefire.version>
+		<mvn-surefire.version>3.5.3</mvn-surefire.version>
 		<mvn-enforcer.version>3.5.0</mvn-enforcer.version>
 		<mvn-source.version>3.3.1</mvn-source.version>
 		<mvn-javadoc.version>3.11.2</mvn-javadoc.version>
 		<mvn-gpg.version>3.2.7</mvn-gpg.version>
 		<mvn-deploy.version>3.1.4</mvn-deploy.version>
-		<dependency-check.version>12.1.0</dependency-check.version>
+		<dependency-check.version>12.1.1</dependency-check.version>
 		<central-publishing.version>0.7.0</central-publishing.version>
 	</properties>
 

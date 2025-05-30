@@ -5,7 +5,7 @@ import org.cryptomator.integrations.revealpath.RevealPathService;
 import org.cryptomator.integrations.tray.TrayMenuController;
 import org.cryptomator.linux.autostart.FreedesktopAutoStartService;
 import org.cryptomator.linux.keychain.KDEWalletKeychainAccess;
-import org.cryptomator.linux.keychain.SecretServiceKeychainAccess;
+import org.cryptomator.linux.keychain.GnomeKeyringKeychainAccess;
 import org.cryptomator.linux.quickaccess.DolphinPlaces;
 import org.cryptomator.linux.quickaccess.NautilusBookmarks;
 import org.cryptomator.linux.revealpath.DBusSendRevealPathService;
@@ -20,7 +20,7 @@ module org.cryptomator.integrations.linux {
 	requires de.swiesend.secretservice;
 
 	provides AutoStartProvider with FreedesktopAutoStartService;
-	provides KeychainAccessProvider with SecretServiceKeychainAccess, KDEWalletKeychainAccess;
+	provides KeychainAccessProvider with GnomeKeyringKeychainAccess, KDEWalletKeychainAccess;
 	provides RevealPathService with DBusSendRevealPathService;
 	provides TrayMenuController with AppindicatorTrayMenuController;
 	provides QuickAccessService with NautilusBookmarks, DolphinPlaces;
