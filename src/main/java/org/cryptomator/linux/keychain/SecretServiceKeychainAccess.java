@@ -28,7 +28,7 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 	@Override
 	public boolean isSupported() {
 		try {
-			return SimpleCollection.isAvailable();
+			return SimpleCollection.isGnomeKeyringAvailable();
 		} catch (RuntimeException e) {
 			LOG.warn("Initializing secret service keychain access failed", e);
 			return false;
