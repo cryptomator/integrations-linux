@@ -14,15 +14,15 @@ import java.util.Map;
 
 @Priority(900)
 @OperatingSystem(OperatingSystem.Value.LINUX)
-public class SecretServiceKeychainAccess implements KeychainAccessProvider {
+public class GnomeKeyringKeychainAccess implements KeychainAccessProvider {
 
-	private static final Logger LOG = LoggerFactory.getLogger(SecretServiceKeychainAccess.class);
+	private static final Logger LOG = LoggerFactory.getLogger(GnomeKeyringKeychainAccess.class);
 
 	private final String LABEL_FOR_SECRET_IN_KEYRING = "Cryptomator";
 
 	@Override
 	public String displayName() {
-		return "Gnome Keyring";
+		return "GNOME Keyring";
 	}
 
 	@Override

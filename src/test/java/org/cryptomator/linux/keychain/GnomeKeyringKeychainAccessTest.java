@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
  * Unit tests for GNOME keyring access via DBUS.
  */
 @EnabledIfEnvironmentVariable(named = "DISPLAY", matches = ".*")
-public class SecretServiceKeychainAccessTest {
+public class GnomeKeyringKeychainAccessTest {
 
 	private static boolean isInstalled;
 
@@ -42,7 +42,7 @@ public class SecretServiceKeychainAccessTest {
 
 	@Test
 	public void testIsSupported() {
-		var gnomeKeyring = new SecretServiceKeychainAccess();
+		var gnomeKeyring = new GnomeKeyringKeychainAccess();
 		Assertions.assertEquals(isInstalled, gnomeKeyring.isSupported());
 	}
 
@@ -52,7 +52,7 @@ public class SecretServiceKeychainAccessTest {
 	class FunctionalTests {
 
 		static final String KEY_ID = "cryptomator-test-" + UUID.randomUUID();
-		final SecretServiceKeychainAccess gnomeKeyring = new SecretServiceKeychainAccess();
+		final GnomeKeyringKeychainAccess gnomeKeyring = new GnomeKeyringKeychainAccess();
 
 		@Test
 		@Order(1)
@@ -82,7 +82,7 @@ public class SecretServiceKeychainAccessTest {
 		}
 
 		public static boolean gnomeKeyringAvailableAndUnlocked() {
-			var secretServiceKeychain = new SecretServiceKeychainAccess();
+			var secretServiceKeychain = new GnomeKeyringKeychainAccess();
 			return secretServiceKeychain.isSupported() && !secretServiceKeychain.isLocked();
 		}
 	}
