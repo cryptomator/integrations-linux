@@ -1,5 +1,6 @@
 package org.cryptomator.linux.keychain;
 
+import org.cryptomator.integrations.common.DisplayName;
 import org.cryptomator.integrations.common.OperatingSystem;
 import org.cryptomator.integrations.common.Priority;
 import org.cryptomator.integrations.keychain.KeychainAccessException;
@@ -20,6 +21,7 @@ import java.util.Optional;
 
 @Priority(900)
 @OperatingSystem(OperatingSystem.Value.LINUX)
+@DisplayName("KDE Wallet")
 public class KDEWalletKeychainAccess implements KeychainAccessProvider {
 
 	private static final Logger LOG = LoggerFactory.getLogger(KDEWalletKeychainAccess.class);
@@ -33,11 +35,6 @@ public class KDEWalletKeychainAccess implements KeychainAccessProvider {
 	}
 
 	@Override
-	public String displayName() {
-		return "KDE Wallet";
-	}
-
-	@Override
 	public boolean isSupported() {
 		return wallet.map(ConnectedWallet::isSupported).orElse(false);
 	}
@@ -48,7 +45,7 @@ public class KDEWalletKeychainAccess implements KeychainAccessProvider {
 	}
 
 	@Override
-	public void storePassphrase(String key, String displayName, CharSequence passphrase, boolean ignored) throws KeychainAccessException {
+	public void storePassphrase(String key, String displayName, CharSequence passphrase) throws KeychainAccessException {
 		CheckUtil.checkState(wallet.isPresent(), "Keychain not supported.");
 		wallet.get().storePassphrase(key, passphrase);
 	}
