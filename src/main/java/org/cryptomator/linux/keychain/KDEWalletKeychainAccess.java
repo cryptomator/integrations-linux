@@ -17,6 +17,8 @@ import org.purejava.kwallet.Static;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.Optional;
 
 @Priority(900)
@@ -68,13 +70,25 @@ public class KDEWalletKeychainAccess implements KeychainAccessProvider {
 		wallet.get().changePassphrase(key, passphrase);
 	}
 
-	private static class ConnectedWallet {
+	private static class ConnectedWallet implements PropertyChangeListener {
 
 		private final KDEWallet wallet;
 		private int handle = -1;
 
 		public ConnectedWallet(DBusConnection connection) {
 			this.wallet = new KDEWallet(connection);
+			this.wallet.getSignalHandler().addPropertyChangeListener(this);
+		}
+
+		@Override
+		public void propertyChange(PropertyChangeEvent event) {
+			if (event.getPropertyName().equals("KWallet.walletAsyncOpened")
+				&& event.getNewValue() instanceof Integer i) {
+				handle = i;
+				if (handle != -1) {
+					LOG.info("Wallet successfully opened.");
+				}
+			}
 		}
 
 		static Optional<ConnectedWallet> connect() {
@@ -181,15 +195,10 @@ public class KDEWalletKeychainAccess implements KeychainAccessProvider {
 					return true;
 				}
 				wallet.openAsync(Static.DEFAULT_WALLET, 0, APP_NAME, false);
-				wallet.getSignalHandler().await(KWallet.walletAsyncOpened.class, Static.ObjectPaths.KWALLETD5, () -> null);
-				handle = wallet.getSignalHandler().getLastHandledSignal(KWallet.walletAsyncOpened.class, Static.ObjectPaths.KWALLETD5).handle;
-				LOG.debug("Wallet successfully initialized.");
 				return handle != -1;
 			} catch (RuntimeException e) {
 				throw new KeychainAccessException("Asynchronous opening the wallet failed.", e);
 			}
 		}
-
-
 	}
 }
