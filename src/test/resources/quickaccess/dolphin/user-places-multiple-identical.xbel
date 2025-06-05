@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This file simulates a valid bookmark file -->
+<!DOCTYPE xbel>
+<xbel xmlns:bookmark="http://www.freedesktop.org/standards/desktop-bookmarks" xmlns:kdepriv="http://www.kde.org/kdepriv"
+	  xmlns:mime="http://www.freedesktop.org/standards/shared-mime-info">
+	<bookmark href="file:///home/someuser/folder1">
+		<title>folder 1</title>
+		<info>
+			<metadata owner="http://freedesktop.org">
+				<bookmark:icon name="drive-harddisk-encrypted"/>
+			</metadata>
+			<metadata owner="https://cryptomator.org">
+				<id>c4b72799-ca67-4c2e-b727-99ca67dc2e5d</id>
+			</metadata>
+		</info>
+	</bookmark>
+	<bookmark href="file:///home/someuser/folder1">
+		<title>folder 1</title>
+		<info>
+			<metadata owner="http://freedesktop.org">
+				<bookmark:icon name="drive-harddisk-encrypted"/>
+			</metadata>
+			<metadata owner="https://cryptomator.org">
+				<id>43c6fdb9-626d-468e-86fd-b9626dc68e04d</id>
+			</metadata>
+		</info>
+	</bookmark>
+</xbel>
