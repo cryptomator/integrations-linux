@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;
@@ -192,9 +193,15 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 			builderFactory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
 			builderFactory.setXIncludeAware(false);
 			builderFactory.setExpandEntityReferences(false);
+			builderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+			builderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
+			builderFactory.setNamespaceAware(true);
 
 			DocumentBuilder builder = builderFactory.newDocumentBuilder();
 
+			// Prevent external entities from being resolved
+			builder.setEntityResolver((publicId, systemId) -> new InputSource(new StringReader("")));
+			
 			return builder.parse(new ByteArrayInputStream(config.getBytes(StandardCharsets.UTF_8)));
 
 		} catch (Exception e) {
