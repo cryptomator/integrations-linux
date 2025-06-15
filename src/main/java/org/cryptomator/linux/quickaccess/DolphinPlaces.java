@@ -123,19 +123,9 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 
 	private void removeStaleBookmarks(NodeList nodeList) {
 
-		var nodesToRemove = new ArrayList<Node>();
-
-		for (int i = 0; i < nodeList.getLength(); i++) {
-			nodesToRemove.add(nodeList.item(i));
-		}
-
-		for (Node node : nodesToRemove) {
-
-			Node parent = node.getParentNode();
-
-			if (parent != null) {
-				parent.removeChild(node);
-			}
+		for (int i = nodeList.getLength() - 1; i >= 0; i--) {
+			Node node = nodeList.item(i);
+			node.getParentNode().removeChild(node);
 		}
 	}
 
@@ -327,7 +317,7 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 	 */
 	private class SimpleVariableResolver implements XPathVariableResolver {
 
-		private final Map<QName, Object> vars = new HashMap<QName, Object>();
+		private final Map<QName, Object> vars = new HashMap<>();
 
 		/**
 		 * Adds a variable to the resolver.
