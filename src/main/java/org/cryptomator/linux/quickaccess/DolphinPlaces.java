@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;
@@ -38,7 +37,6 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -69,8 +67,8 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 
 			SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 
-			factory.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
-			factory.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
+			//factory.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+			//factory.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
 
 			Source schemaFile = new StreamSource(schemaDefinition);
 			XML_VALIDATOR = factory.newSchema(schemaFile).newValidator();
@@ -179,19 +177,17 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 
 			DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
 
-			builderFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-			builderFactory.setFeature("http://xml.org/sax/features/external-general-entities", false);
-			builderFactory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
-			builderFactory.setXIncludeAware(false);
-			builderFactory.setExpandEntityReferences(false);
-			builderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
-			builderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
-			builderFactory.setNamespaceAware(true);
+			//builderFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+			//builderFactory.setXIncludeAware(false);
+			//builderFactory.setExpandEntityReferences(false);
+			//builderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+			//builderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
+			//builderFactory.setNamespaceAware(true);
 
 			DocumentBuilder builder = builderFactory.newDocumentBuilder();
 
 			// Prevent external entities from being resolved
-			builder.setEntityResolver((publicId, systemId) -> new InputSource(new StringReader("")));
+			//builder.setEntityResolver((publicId, systemId) -> new InputSource(new StringReader("")));
 
 			return builder.parse(new ByteArrayInputStream(config.getBytes(StandardCharsets.UTF_8)));
 
@@ -206,13 +202,24 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 
 			StringWriter buf = new StringWriter();
 
-			Transformer xform = TransformerFactory.newInstance().newTransformer();
-			xform.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-			xform.setOutputProperty(OutputKeys.INDENT, "yes");
-			xform.setOutputProperty(OutputKeys.ENCODING, StandardCharsets.UTF_8.name());
-			xform.transform(new DOMSource(xmlDocument), new StreamResult(buf));
+			Transformer transformer = TransformerFactory.newInstance().newTransformer();
+			transformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, "");
+			transformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, "");
+			transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
 
-			return buf.toString();
+			//transformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, "xbel");
+			//transformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, "xbel");
+			//transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+			//transformer.setOutputProperty(OutputKeys.ENCODING, StandardCharsets.UTF_8.name());
+			//transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
+
+			transformer.transform(new DOMSource(xmlDocument), new StreamResult(buf));
+
+			var content = buf.toString();
+			content = content.replaceFirst("\\s*standalone=\"(yes|no)\"", "");
+			content = content.replace("<!DOCTYPE xbel PUBLIC \"\" \"\">","<!DOCTYPE xbel>");
+
+			return content;
 
 		} catch (Exception e) {
 			throw new QuickAccessServiceException("Failed to read document into string", e);

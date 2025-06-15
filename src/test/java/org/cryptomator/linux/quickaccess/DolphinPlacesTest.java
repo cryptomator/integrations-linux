@@ -131,6 +131,34 @@ public class DolphinPlacesTest {
 		assertEquals(1, countOccurrences(loadFile(pathToDoc), "&lt; &amp; &gt;"));
 	}
 
+	@Test
+	@DisplayName("The xml file root object should not be changed when adding an entry")
+	public void xmlFileRootObjectShouldNotBeChangedWhenAddingAnEntry(@TempDir Path tmpdir) throws IOException {
+
+		var pathToDoc = loadResourceToDir(RESOURCE_USER_PLACES, tmpdir);
+
+		var rootObject = """
+				<?xml version="1.0" encoding="UTF-8"?>
+				<!-- This file simulates a valid bookmark file -->
+				<!DOCTYPE xbel>
+				<xbel xmlns:bookmark="http://www.freedesktop.org/standards/desktop-bookmarks" xmlns:kdepriv="http://www.kde.org/kdepriv" 
+				 xmlns:mime="http://www.freedesktop.org/standards/shared-mime-info">
+				
+				""".replaceAll("[\\r\\n\\t]", "");
+
+
+		assertDoesNotThrow(() -> {
+
+			new DolphinPlaces(tmpdir).add(Path.of(PATH_FOLDER_1), "my-caption");
+
+		});
+
+		var file = Files.readString(pathToDoc).replaceAll("[\\r\\n\\t]", "");
+
+		assertEquals(file.substring(0,rootObject.length()), rootObject);
+	}
+
+
 	private Path loadResourceToDir(String source, Path targetDir)  {
 
 		try (var stream = this.getClass().getClassLoader().getResourceAsStream(source)) {
