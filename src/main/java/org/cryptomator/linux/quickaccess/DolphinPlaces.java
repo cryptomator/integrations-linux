@@ -260,7 +260,7 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 			var info = xmlDocument.createElement("info");
 			var metadataBookmark = xmlDocument.createElement("metadata");
 			var metadataOwner = xmlDocument.createElement("metadata");
-			var bookmarkIcon = xmlDocument.createElementNS(XBEL_NAMESPACE, "icon");
+			var bookmarkIcon = xmlDocument.createElementNS(XBEL_NAMESPACE, "bookmark:icon");
 			var idElem = xmlDocument.createElement("id");
 
 			bookmark.setAttribute("href", target.toUri().toString());
@@ -275,8 +275,6 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 
 			metadataBookmark.appendChild(bookmarkIcon);
 			metadataOwner.appendChild(idElem);
-
-
 
 			metadataBookmark.setAttribute("owner", "http://freedesktop.org");
 
