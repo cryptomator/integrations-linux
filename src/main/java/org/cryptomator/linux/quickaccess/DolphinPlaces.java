@@ -9,10 +9,12 @@ import org.cryptomator.integrations.quickaccess.QuickAccessServiceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;
+import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
@@ -27,6 +29,7 @@ import javax.xml.validation.Validator;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
+import javax.xml.xpath.XPathVariableResolver;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringReader;
@@ -34,6 +37,9 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -114,19 +120,37 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 	}
 
 	private void removeStaleBookmarks(NodeList nodeList) {
-		for (int k = 0; k < nodeList.getLength() ; k++){
-			nodeList.item(k).getParentNode().removeChild(nodeList.item(k));
+
+		var nodesToRemove = new ArrayList<Node>();
+
+		for (int i = 0; i < nodeList.getLength(); i++) {
+			nodesToRemove.add(nodeList.item(i));
+		}
+
+		for (Node node : nodesToRemove) {
+
+			Node parent = node.getParentNode();
+
+			if (parent != null) {
+				parent.removeChild(node);
+			}
 		}
 	}
 
-	private static NodeList extractBookmarksByPath(Path target, Document xmlDocument) throws QuickAccessServiceException {
+	private NodeList extractBookmarksByPath(Path target, Document xmlDocument) throws QuickAccessServiceException {
 
 		try {
 
 			XPathFactory xpathFactory = XPathFactory.newInstance();
 			XPath xpath = xpathFactory.newXPath();
 
-			String expression = "/xbel/bookmark[info/metadata[@owner='https://cryptomator.org']][@href='" + target.toUri() + "']";
+			SimpleVariableResolver variableResolver = new SimpleVariableResolver();
+
+			variableResolver.addVariable(new QName("uri"), target.toUri().toString());
+
+			xpath.setXPathVariableResolver(variableResolver);
+
+			String expression = "/xbel/bookmark[info/metadata[@owner='https://cryptomator.org']][@href=$uri]";
 
 			return (NodeList) xpath.compile(expression).evaluate(xmlDocument, XPathConstants.NODESET);
 
@@ -135,14 +159,20 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 		}
 	}
 
-	private static NodeList extractBookmarksById(String id, Document xmlDocument) throws QuickAccessServiceException {
+	private NodeList extractBookmarksById(String id, Document xmlDocument) throws QuickAccessServiceException {
 
 		try {
 
 			XPathFactory xpathFactory = XPathFactory.newInstance();
 			XPath xpath = xpathFactory.newXPath();
 
-			String expression = "/xbel/bookmark[info/metadata[@owner='https://cryptomator.org']][info/metadata/id[text()='" + id + "']]";
+			SimpleVariableResolver variableResolver = new SimpleVariableResolver();
+
+			variableResolver.addVariable(new QName("id"), id);
+
+			xpath.setXPathVariableResolver(variableResolver);
+
+			String expression = "/xbel/bookmark[info/metadata[@owner='https://cryptomator.org']][info/metadata/id[text()=$id]]";
 
 			return (NodeList) xpath.compile(expression).evaluate(xmlDocument, XPathConstants.NODESET);
 
@@ -151,7 +181,7 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 		}
 	}
 
-	private static Document loadXmlDocument(String config) throws QuickAccessServiceException {
+	private Document loadXmlDocument(String config) throws QuickAccessServiceException {
 
 		try {
 
@@ -280,6 +310,34 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 			} catch (IOException | SAXException | IllegalStateException e) {
 				throw new QuickAccessServiceException("Removing entry from KDE places file failed.", e);
 			}
+		}
+	}
+
+	/**
+	 * Resolver in order to define parameter for XPATH expression.
+	 */
+	private class SimpleVariableResolver implements XPathVariableResolver {
+
+		private final Map<QName, Object> vars = new HashMap<QName, Object>();
+
+		/**
+		 * Adds a variable to the resolver.
+		 *
+		 * @param name  The name of the variable
+		 * @param value The value of the variable
+		 */
+		public void addVariable(QName name, Object value) {
+			vars.put(name, value);
+		}
+
+		/**
+		 * Resolves a variable by its name.
+		 *
+		 * @param variableName The name of the variable to resolve
+		 * @return The value of the variable, or null if not found
+		 */
+		public Object resolveVariable(QName variableName) {
+			return vars.get(variableName);
 		}
 	}
 
