@@ -33,7 +33,7 @@ abstract class FileConfiguredQuickAccess implements QuickAccessService {
 
 	/**
 	 *
-	 * Adds the vault path to the quickacces config file
+	 * Adds the vault path to the quick-acces config file
 	 *
 	 * @param target The mount point of the vault
 	 * @param displayName Caption of the vault link

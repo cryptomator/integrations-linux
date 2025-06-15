@@ -1,5 +1,6 @@
 package org.cryptomator.linux.quickaccess;
 
+import org.cryptomator.integrations.quickaccess.QuickAccessServiceException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -83,7 +84,7 @@ public class DolphinPlacesTest {
 		assertEquals(1, countOccurrences(loadFile(pathToDoc), UUID_FOLDER_1));
 		assertEquals(1, countOccurrences(loadFile(pathToDoc), CAPTION_FOLDER_1));
 
-		assertThrows(Exception.class, () -> {
+		assertThrows(QuickAccessServiceException.class, () -> {
 
 			new DolphinPlaces(tmpdir).add(Path.of(PATH_FOLDER_1), CAPTION_FOLDER_1);
 
@@ -102,7 +103,7 @@ public class DolphinPlacesTest {
 		assertEquals(1, countOccurrences(loadFile(pathToDoc), UUID_FOLDER_1));
 		assertEquals(1, countOccurrences(loadFile(pathToDoc), CAPTION_FOLDER_1));
 
-		assertThrows(Exception.class, () -> {
+		assertThrows(QuickAccessServiceException.class, () -> {
 
 			new DolphinPlaces(tmpdir).add(Path.of(PATH_FOLDER_1), CAPTION_FOLDER_1);
 
