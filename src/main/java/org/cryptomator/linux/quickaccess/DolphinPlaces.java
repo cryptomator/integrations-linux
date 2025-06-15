@@ -217,8 +217,9 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 			StringWriter buf = new StringWriter();
 
 			Transformer xform = TransformerFactory.newInstance().newTransformer();
-			xform.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes"); // optional
-			xform.setOutputProperty(OutputKeys.INDENT, "yes"); // optional
+			xform.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+			xform.setOutputProperty(OutputKeys.INDENT, "yes");
+			xform.setOutputProperty(OutputKeys.ENCODING, StandardCharsets.UTF_8.name());
 			xform.transform(new DOMSource(xmlDocument), new StreamResult(buf));
 
 			return buf.toString();
