@@ -201,7 +201,7 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 
 			// Prevent external entities from being resolved
 			builder.setEntityResolver((publicId, systemId) -> new InputSource(new StringReader("")));
-			
+
 			return builder.parse(new ByteArrayInputStream(config.getBytes(StandardCharsets.UTF_8)));
 
 		} catch (Exception e) {

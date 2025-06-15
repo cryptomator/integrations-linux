@@ -8,6 +8,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -138,7 +139,7 @@ public class DolphinPlacesTest {
 				throw new IOException("Resource not found: " + source);
 			}
 
-			Files.copy(stream, targetDir.resolve("user-places.xbel"));
+			Files.copy(stream, targetDir.resolve("user-places.xbel"), StandardCopyOption.REPLACE_EXISTING);
 
 			return targetDir.resolve("user-places.xbel");
 
@@ -160,7 +161,7 @@ public class DolphinPlacesTest {
 		}
 	}
 
-	public int countOccurrences(String content, String searchString) {
+	private int countOccurrences(String content, String searchString) {
 		int count = 0;
 		int index = 0;
 
