@@ -33,12 +33,12 @@ abstract class FileConfiguredQuickAccess implements QuickAccessService {
 
 	/**
 	 *
-	 * Adds the vault path to the quick-acces config file
+	 * Adds the vault path to the quick-access config file
 	 *
 	 * @param target The mount point of the vault
 	 * @param displayName Caption of the vault link
 	 * @return A cleanup reference for vault link removal
-	 * @throws QuickAccessServiceException
+	 * @throws QuickAccessServiceException If the entry could not be added to the quick-access config file
 	 */
 	@Override
 	public QuickAccessEntry add(Path target, String displayName) throws QuickAccessServiceException {
