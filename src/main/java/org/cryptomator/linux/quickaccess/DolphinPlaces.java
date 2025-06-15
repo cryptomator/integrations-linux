@@ -54,9 +54,10 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 
 	private static final Logger LOG = LoggerFactory.getLogger(DolphinPlaces.class);
 
+	private static final String XBEL_NAMESPACE = "http://www.freedesktop.org/standards/desktop-bookmarks";
 	private static final int MAX_FILE_SIZE = 1 << 20; //1MiB, xml is quite verbose
 	private static final String HOME_DIR = System.getProperty("user.home");
-	private static final String CONFIG_PATH_IN_HOME = ".local/share/";
+	private static final String CONFIG_PATH_IN_HOME = ".local/share";
 	private static final String CONFIG_FILE_NAME = "user-places.xbel";
 	private static final Path PLACES_FILE = Path.of(HOME_DIR,CONFIG_PATH_IN_HOME, CONFIG_FILE_NAME);
 
@@ -254,13 +255,12 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 	private void createBookmark(Path target, String displayName, String id, Document xmlDocument) throws QuickAccessServiceException {
 
 		try {
-
 			var bookmark = xmlDocument.createElement("bookmark");
 			var title = xmlDocument.createElement("title");
 			var info = xmlDocument.createElement("info");
 			var metadataBookmark = xmlDocument.createElement("metadata");
 			var metadataOwner = xmlDocument.createElement("metadata");
-			var bookmarkIcon = xmlDocument.createElement("bookmark:icon");
+			var bookmarkIcon = xmlDocument.createElementNS(XBEL_NAMESPACE, "icon");
 			var idElem = xmlDocument.createElement("id");
 
 			bookmark.setAttribute("href", target.toUri().toString());
@@ -275,6 +275,9 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 
 			metadataBookmark.appendChild(bookmarkIcon);
 			metadataOwner.appendChild(idElem);
+
+
+
 			metadataBookmark.setAttribute("owner", "http://freedesktop.org");
 
 			bookmarkIcon.setAttribute("name","drive-harddisk-encrypted");
