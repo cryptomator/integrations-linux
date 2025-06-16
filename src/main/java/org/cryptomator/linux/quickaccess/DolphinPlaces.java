@@ -209,8 +209,9 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 			transformer.transform(new DOMSource(xmlDocument), new StreamResult(buf));
 
 			var content = buf.toString();
+
 			content = content.replaceFirst("\\s*standalone=\"(yes|no)\"", "");
-			content = content.replace("<!DOCTYPE xbel PUBLIC \"\" \"\">","<!DOCTYPE xbel>");
+			content = content.replaceFirst("<!DOCTYPE xbel PUBLIC \"\" \"\">","<!DOCTYPE xbel>");
 
 			return content;
 
