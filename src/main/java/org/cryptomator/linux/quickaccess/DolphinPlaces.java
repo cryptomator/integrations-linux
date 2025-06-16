@@ -103,9 +103,11 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 
 			createBookmark(target, displayName, id, xmlDocument);
 
-			validator.validate(new StreamSource(new StringReader(config)));
+			var changedConfig = documentToString(xmlDocument);
 
-			return new EntryAndConfig(new DolphinPlacesEntry(id), documentToString(xmlDocument));
+			validator.validate(new StreamSource(new StringReader(changedConfig)));
+
+			return new EntryAndConfig(new DolphinPlacesEntry(id), changedConfig);
 
 		} catch (SAXException e) {
 			throw new QuickAccessServiceException("Invalid structure in xbel bookmark file", e);
@@ -304,9 +306,11 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 
 				removeStaleBookmarks(nodeList);
 
-				validator.validate(new StreamSource(new StringReader(config)));
+				var changedConfig = documentToString(xmlDocument);
 
-				return documentToString(xmlDocument);
+				validator.validate(new StreamSource(new StringReader(changedConfig)));
+
+				return changedConfig;
 
 			} catch (IOException | SAXException | IllegalStateException e) {
 				throw new QuickAccessServiceException("Removing entry from KDE places file failed.", e);
