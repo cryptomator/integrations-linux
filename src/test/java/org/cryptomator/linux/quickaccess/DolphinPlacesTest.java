@@ -155,7 +155,7 @@ public class DolphinPlacesTest {
 
 		var file = Files.readString(pathToDoc).replaceAll("[\\r\\n\\t]", "");
 
-		assertEquals(file.substring(0,rootObject.length()), rootObject);
+		assertEquals(file.substring(0,rootObject.length()), rootObject, "Root object of the XML file should not be changed when adding an entry");
 	}
 
 

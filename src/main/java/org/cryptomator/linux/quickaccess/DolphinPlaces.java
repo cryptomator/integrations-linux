@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;
@@ -18,14 +19,13 @@ import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
+import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
-import javax.xml.validation.Validator;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
@@ -59,19 +59,14 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 	private static final String CONFIG_FILE_NAME = "user-places.xbel";
 	private static final Path PLACES_FILE = Path.of(HOME_DIR,CONFIG_PATH_IN_HOME, CONFIG_FILE_NAME);
 
-	private static final Validator XML_VALIDATOR;
+	private static final Schema XBEL_SCHEMA;
 
 	static {
 
 		try (var schemaDefinition = DolphinPlaces.class.getResourceAsStream("/xbel-1.0.xsd")) {
 
 			SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-
-			//factory.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
-			//factory.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
-
-			Source schemaFile = new StreamSource(schemaDefinition);
-			XML_VALIDATOR = factory.newSchema(schemaFile).newValidator();
+			XBEL_SCHEMA = factory.newSchema(new StreamSource(schemaDefinition));
 
 		} catch (IOException | SAXException e) {
 			throw new IllegalStateException("Failed to load included XBEL schema definition file.", e);
@@ -94,11 +89,11 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 
 			String id = UUID.randomUUID().toString();
 
+			var validator = XBEL_SCHEMA.newValidator();
+
 			LOG.trace("Adding bookmark for target: '{}', displayName: '{}', id: '{}'", target, displayName, id);
 
-			// Validate the existing config before modifying it, if it is invalid
-			// we should not modify it.
-			XML_VALIDATOR.validate(new StreamSource(new StringReader(config)));
+			validator.validate(new StreamSource(new StringReader(config)));
 
 			Document xmlDocument = loadXmlDocument(config);
 
@@ -108,7 +103,7 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 
 			createBookmark(target, displayName, id, xmlDocument);
 
-			XML_VALIDATOR.validate(new DOMSource(xmlDocument));
+			validator.validate(new StreamSource(new StringReader(config)));
 
 			return new EntryAndConfig(new DolphinPlacesEntry(id), documentToString(xmlDocument));
 
@@ -177,17 +172,17 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 
 			DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
 
-			//builderFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-			//builderFactory.setXIncludeAware(false);
-			//builderFactory.setExpandEntityReferences(false);
-			//builderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
-			//builderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
-			//builderFactory.setNamespaceAware(true);
+			builderFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+			builderFactory.setXIncludeAware(false);
+			builderFactory.setExpandEntityReferences(false);
+			builderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+			builderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
+			builderFactory.setNamespaceAware(true);
 
 			DocumentBuilder builder = builderFactory.newDocumentBuilder();
 
 			// Prevent external entities from being resolved
-			//builder.setEntityResolver((publicId, systemId) -> new InputSource(new StringReader("")));
+			builder.setEntityResolver((publicId, systemId) -> new InputSource(new StringReader("")));
 
 			return builder.parse(new ByteArrayInputStream(config.getBytes(StandardCharsets.UTF_8)));
 
@@ -207,11 +202,9 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 			transformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, "");
 			transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
 
-			//transformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, "xbel");
-			//transformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, "xbel");
-			//transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-			//transformer.setOutputProperty(OutputKeys.ENCODING, StandardCharsets.UTF_8.name());
-			//transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
+			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+			transformer.setOutputProperty(OutputKeys.ENCODING, StandardCharsets.UTF_8.name());
+			transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
 
 			transformer.transform(new DOMSource(xmlDocument), new StreamResult(buf));
 
@@ -300,8 +293,9 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 		public String removeEntryFromConfig(String config) throws QuickAccessServiceException {
 
 			try {
+				var validator = XBEL_SCHEMA.newValidator();
 
-				XML_VALIDATOR.validate(new StreamSource(new StringReader(config)));
+				validator.validate(new StreamSource(new StringReader(config)));
 
 				Document xmlDocument = loadXmlDocument(config);
 
@@ -309,7 +303,7 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 
 				removeStaleBookmarks(nodeList);
 
-				XML_VALIDATOR.validate(new DOMSource(xmlDocument));
+				validator.validate(new StreamSource(new StringReader(config)));
 
 				return documentToString(xmlDocument);
 

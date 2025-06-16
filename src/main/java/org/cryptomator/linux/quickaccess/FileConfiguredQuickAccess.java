@@ -44,8 +44,13 @@ abstract class FileConfiguredQuickAccess implements QuickAccessService {
 	public QuickAccessEntry add(Path target, String displayName) throws QuickAccessServiceException {
 		try {
 			modifyLock.lock();
+
+			checkFileSize();
+
 			var entryAndConfig = addEntryToConfig(readConfig(), target, displayName);
+
 			persistConfig(entryAndConfig.config());
+
 			return entryAndConfig.entry();
 		} catch (IOException e) {
 			throw new QuickAccessServiceException("Failed to add entry to %s.".formatted(configFile), e);
