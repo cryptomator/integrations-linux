@@ -6,18 +6,39 @@ import org.cryptomator.integrations.common.OperatingSystem;
 import org.cryptomator.integrations.common.Priority;
 import org.cryptomator.integrations.quickaccess.QuickAccessService;
 import org.cryptomator.integrations.quickaccess.QuickAccessServiceException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;
-import javax.xml.transform.Source;
+import javax.xml.namespace.QName;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
+import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
-import javax.xml.validation.Validator;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathFactory;
+import javax.xml.xpath.XPathVariableResolver;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringReader;
+import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -29,28 +50,21 @@ import java.util.UUID;
 @Priority(90)
 public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAccessService {
 
-	private static final int MAX_FILE_SIZE = 1 << 20; //1MiB, xml is quite verbose
-	private static final Path PLACES_FILE = Path.of(System.getProperty("user.home"), ".local/share/user-places.xbel");
-	private static final String ENTRY_TEMPLATE = """
-			<bookmark href=\"%s\">
-			 <title>%s</title>
-			 <info>
-			  <metadata owner=\"http://freedesktop.org\">
-			   <bookmark:icon name="drive-harddisk-encrypted"/>
-			  </metadata>
-			  <metadata owner=\"https://cryptomator.org\">
-			  	<id>%s</id>
-			  </metadata>
-			 </info>
-			</bookmark>""";
+	private static final Logger LOG = LoggerFactory.getLogger(DolphinPlaces.class);
 
-	private static final Validator XML_VALIDATOR;
+	private static final String XBEL_NAMESPACE = "http://www.freedesktop.org/standards/desktop-bookmarks";
+	private static final int MAX_FILE_SIZE = 1 << 20; //1MiB, xml is quite verbose
+	private static final String HOME_DIR = System.getProperty("user.home");
+	private static final String CONFIG_PATH_IN_HOME = ".local/share";
+	private static final String CONFIG_FILE_NAME = "user-places.xbel";
+	private static final Path PLACES_FILE = Path.of(HOME_DIR,CONFIG_PATH_IN_HOME, CONFIG_FILE_NAME);
+
+	private static final Schema XBEL_SCHEMA;
 
 	static {
-		SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 		try (var schemaDefinition = DolphinPlaces.class.getResourceAsStream("/xbel-1.0.xsd")) {
-			Source schemaFile = new StreamSource(schemaDefinition);
-			XML_VALIDATOR = factory.newSchema(schemaFile).newValidator();
+			SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+			XBEL_SCHEMA = factory.newSchema(new StreamSource(schemaDefinition));
 		} catch (IOException | SAXException e) {
 			throw new IllegalStateException("Failed to load included XBEL schema definition file.", e);
 		}
@@ -61,29 +75,153 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 		super(PLACES_FILE, MAX_FILE_SIZE);
 	}
 
+	public DolphinPlaces(Path configFilePath) {
+		super(configFilePath.resolve(CONFIG_FILE_NAME), MAX_FILE_SIZE);
+	}
+
 	@Override
 	EntryAndConfig addEntryToConfig(String config, Path target, String displayName) throws QuickAccessServiceException {
+
 		try {
-			String id = UUID.randomUUID().toString();
-			//validate
-			XML_VALIDATOR.validate(new StreamSource(new StringReader(config)));
-			// modify
-			int insertIndex = config.lastIndexOf("</xbel"); //cannot be -1 due to validation; we do not match the whole end tag, since between tag name and closing bracket can be whitespaces
-			var adjustedConfig = config.substring(0, insertIndex) //
-					+ "\n" //
-					+ ENTRY_TEMPLATE.formatted(target.toUri(), escapeXML(displayName), id).indent(1) //
-					+ "\n" //
-					+ config.substring(insertIndex);
-			return new EntryAndConfig(new DolphinPlacesEntry(id), adjustedConfig);
-		} catch (SAXException | IOException e) {
-			throw new QuickAccessServiceException("Adding entry to KDE places file failed.", e);
+			var validator = XBEL_SCHEMA.newValidator();
+			var id = UUID.randomUUID().toString();
+			LOG.trace("Adding bookmark for target: '{}', displayName: '{}', id: '{}'", target, displayName, id);
+			validator.validate(new StreamSource(new StringReader(config)));
+			var xmlDocument = loadXmlDocument(config);
+			var nodeList = extractBookmarksByPath(target, xmlDocument);
+			removeStaleBookmarks(nodeList);
+			createBookmark(target, displayName, id, xmlDocument);
+			var changedConfig = documentToString(xmlDocument);
+			validator.validate(new StreamSource(new StringReader(changedConfig)));
+			return new EntryAndConfig(new DolphinPlacesEntry(id), changedConfig);
+		} catch (SAXException e) {
+			throw new QuickAccessServiceException("Invalid structure in xbel bookmark file", e);
+		} catch (IOException e) {
+			throw new QuickAccessServiceException("Failed reading/writing the xbel bookmark file", e);
 		}
 	}
 
-	private String escapeXML(String s) {
-		return s.replace("&","&amp;") //
-				.replace("<","&lt;") //
-				.replace(">","&gt;");
+	private void removeStaleBookmarks(NodeList nodeList) {
+		for (int i = nodeList.getLength() - 1; i >= 0; i--) {
+			Node node = nodeList.item(i);
+			node.getParentNode().removeChild(node);
+		}
+	}
+
+	private NodeList extractBookmarksByPath(Path target, Document xmlDocument) throws QuickAccessServiceException {
+		try {
+			var xpathFactory = XPathFactory.newInstance();
+			var xpath = xpathFactory.newXPath();
+			var variableResolver = new SimpleVariableResolver();
+			variableResolver.addVariable(new QName("uri"), target.toUri().toString());
+			xpath.setXPathVariableResolver(variableResolver);
+			var expression = "/xbel/bookmark[info/metadata[@owner='https://cryptomator.org']][@href=$uri]";
+			return (NodeList) xpath.compile(expression).evaluate(xmlDocument, XPathConstants.NODESET);
+		} catch (Exception e) {
+			throw new QuickAccessServiceException("Failed to extract bookmarks by path", e);
+		}
+	}
+
+	private NodeList extractBookmarksById(String id, Document xmlDocument) throws QuickAccessServiceException {
+		try {
+			var xpathFactory = XPathFactory.newInstance();
+			var xpath = xpathFactory.newXPath();
+			var variableResolver = new SimpleVariableResolver();
+			variableResolver.addVariable(new QName("id"), id);
+			xpath.setXPathVariableResolver(variableResolver);
+			var expression = "/xbel/bookmark[info/metadata[@owner='https://cryptomator.org']][info/metadata/id[text()=$id]]";
+			return (NodeList) xpath.compile(expression).evaluate(xmlDocument, XPathConstants.NODESET);
+		} catch (Exception e) {
+  			throw new QuickAccessServiceException("Failed to extract bookmarks by id", e);
+		}
+	}
+
+	private Document loadXmlDocument(String config) throws QuickAccessServiceException {
+		try {
+			var builderFactory = DocumentBuilderFactory.newInstance();
+			builderFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+			builderFactory.setXIncludeAware(false);
+			builderFactory.setExpandEntityReferences(false);
+			builderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+			builderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
+			builderFactory.setNamespaceAware(true);
+			DocumentBuilder builder = builderFactory.newDocumentBuilder();
+			// Prevent external entities from being resolved
+			builder.setEntityResolver((publicId, systemId) -> new InputSource(new StringReader("")));
+			return builder.parse(new ByteArrayInputStream(config.getBytes(StandardCharsets.UTF_8)));
+		} catch (Exception e) {
+			throw new QuickAccessServiceException("Failed to parse the xbel bookmark file", e);
+		}
+	}
+
+	private String documentToString(Document xmlDocument) throws QuickAccessServiceException {
+		try {
+			var buf = new StringWriter();
+			Transformer transformer = TransformerFactory.newInstance().newTransformer();
+			transformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, "");
+			transformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, "");
+			transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
+			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+			transformer.setOutputProperty(OutputKeys.ENCODING, StandardCharsets.UTF_8.name());
+			transformer.transform(new DOMSource(xmlDocument), new StreamResult(buf));
+			var content = buf.toString();
+			content = content.replaceFirst("\\s*standalone=\"(yes|no)\"", "");
+			content = content.replaceFirst("<!DOCTYPE xbel PUBLIC \"\" \"\">","<!DOCTYPE xbel>");
+			return content;
+		} catch (Exception e) {
+			throw new QuickAccessServiceException("Failed to read document into string", e);
+		}
+	}
+
+	/**
+	 *
+	 * Adds a xml bookmark element to the specified xml document
+	 *
+	 * <pre>{@code
+	 * <bookmark href="file:///home/someuser/folder1/">
+	 *   <title>integrations-linux</title>
+	 *   <info>
+	 *     <metadata owner="http://freedesktop.org">
+	 *       <bookmark:icon name="drive-harddisk-encrypted"/>
+	 *     </metadata>
+	 *     <metadata owner="https://cryptomator.org">
+	 *       <id>sldkf-sadf-sadf-sadf</id>
+	 *     </metadata>
+	 *   </info>
+	 * </bookmark>
+	 * }</pre>
+	 *
+	 * @param target The mount point of the vault
+	 * @param displayName Caption of the vault link in dolphin
+	 * @param xmlDocument The xbel document to which the bookmark should be added
+	 *
+	 * @throws QuickAccessServiceException if the bookmark could not be created
+	 */
+	private void createBookmark(Path target, String displayName, String id, Document xmlDocument) throws QuickAccessServiceException {
+		try {
+			var bookmark = xmlDocument.createElement("bookmark");
+			var title = xmlDocument.createElement("title");
+			var info = xmlDocument.createElement("info");
+			var metadataBookmark = xmlDocument.createElement("metadata");
+			var metadataOwner = xmlDocument.createElement("metadata");
+			var bookmarkIcon = xmlDocument.createElementNS(XBEL_NAMESPACE, "bookmark:icon");
+			var idElem = xmlDocument.createElement("id");
+			bookmark.setAttribute("href", target.toUri().toString());
+			title.setTextContent(displayName);
+			bookmark.appendChild(title);
+			bookmark.appendChild(info);
+			info.appendChild(metadataBookmark);
+			info.appendChild(metadataOwner);
+			metadataBookmark.appendChild(bookmarkIcon);
+			metadataOwner.appendChild(idElem);
+			metadataBookmark.setAttribute("owner", "http://freedesktop.org");
+			bookmarkIcon.setAttribute("name","drive-harddisk-encrypted");
+			metadataOwner.setAttribute("owner", "https://cryptomator.org");
+			idElem.setTextContent(id);
+			xmlDocument.getDocumentElement().appendChild(bookmark);
+		} catch (Exception e) {
+			throw new QuickAccessServiceException("Failed to insert bookmark for target: " + target, e);
+		}
 	}
 
 	private class DolphinPlacesEntry extends FileConfiguredQuickAccessEntry implements QuickAccessEntry {
@@ -97,41 +235,45 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 		@Override
 		public String removeEntryFromConfig(String config) throws QuickAccessServiceException {
 			try {
-				int idIndex = config.lastIndexOf(id);
-				if (idIndex == -1) {
-					return config; //assume someone has removed our entry, nothing to do
-				}
-				//validate
-				XML_VALIDATOR.validate(new StreamSource(new StringReader(config)));
-				//modify
-				int openingTagIndex = indexOfEntryOpeningTag(config, idIndex);
-				var contentToWrite1 = config.substring(0, openingTagIndex).stripTrailing();
-
-				int closingTagEndIndex = config.indexOf('>', config.indexOf("</bookmark", idIndex));
-				var part2Tmp = config.substring(closingTagEndIndex + 1).split("\\A\\v+", 2); //removing leading vertical whitespaces, but no indentation
-				var contentToWrite2 = part2Tmp[part2Tmp.length - 1];
-
-				return contentToWrite1 + "\n" + contentToWrite2;
+				var validator = XBEL_SCHEMA.newValidator();
+				validator.validate(new StreamSource(new StringReader(config)));
+				var xmlDocument = loadXmlDocument(config);
+				var nodeList = extractBookmarksById(id, xmlDocument);
+				removeStaleBookmarks(nodeList);
+				var changedConfig = documentToString(xmlDocument);
+				validator.validate(new StreamSource(new StringReader(changedConfig)));
+				return changedConfig;
 			} catch (IOException | SAXException | IllegalStateException e) {
 				throw new QuickAccessServiceException("Removing entry from KDE places file failed.", e);
 			}
 		}
+	}
+
+	/**
+	 * Resolver in order to define parameter for XPATH expression.
+	 */
+	private class SimpleVariableResolver implements XPathVariableResolver {
+
+		private final Map<QName, Object> vars = new HashMap<>();
 
 		/**
-		 * Returns the start index (inclusive)  of the {@link DolphinPlaces#ENTRY_TEMPLATE} entry
-		 * @param placesContent the content of the XBEL places file
-		 * @param idIndex start index (inclusive) of the entrys id tag value
-		 * @return start index of the first bookmark tag, searching backwards from idIndex
+		 * Adds a variable to the resolver.
+		 *
+		 * @param name  The name of the variable
+		 * @param value The value of the variable
 		 */
-		private int indexOfEntryOpeningTag(String placesContent, int idIndex) {
-			var xmlWhitespaceChars = List.of(' ', '\t', '\n');
-			for (char c : xmlWhitespaceChars) {
-				int idx = placesContent.lastIndexOf("<bookmark" + c, idIndex); //with the whitespace we ensure, that no tags starting with "bookmark" (e.g. bookmarkz) are selected
-				if (idx != -1) {
-					return idx;
-				}
-			}
-			throw new IllegalStateException("Found entry id " + id + " in " + PLACES_FILE + ", but it is not a child of <bookmark> tag.");
+		public void addVariable(QName name, Object value) {
+			vars.put(name, value);
+		}
+
+		/**
+		 * Resolves a variable by its name.
+		 *
+		 * @param variableName The name of the variable to resolve
+		 * @return The value of the variable, or null if not found
+		 */
+		public Object resolveVariable(QName variableName) {
+			return vars.get(variableName);
 		}
 	}
 

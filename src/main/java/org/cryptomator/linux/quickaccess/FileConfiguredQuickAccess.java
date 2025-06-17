@@ -31,10 +31,20 @@ abstract class FileConfiguredQuickAccess implements QuickAccessService {
 		Runtime.getRuntime().addShutdownHook(new Thread(this::cleanup));
 	}
 
+	/**
+	 *
+	 * Adds the vault path to the quick-access config file
+	 *
+	 * @param target The mount point of the vault
+	 * @param displayName Caption of the vault link
+	 * @return A cleanup reference for vault link removal
+	 * @throws QuickAccessServiceException If the entry could not be added to the quick-access config file
+	 */
 	@Override
 	public QuickAccessEntry add(Path target, String displayName) throws QuickAccessServiceException {
 		try {
 			modifyLock.lock();
+			checkFileSize();
 			var entryAndConfig = addEntryToConfig(readConfig(), target, displayName);
 			persistConfig(entryAndConfig.config());
 			return entryAndConfig.entry();
