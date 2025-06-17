@@ -35,17 +35,12 @@ public class DolphinPlacesTest {
 	public void addingAnIdenticalEntryShouldLeadToReplacementOfExistingEntry(@TempDir Path tmpdir)  {
 
 		var pathToDoc = loadResourceToDir(RESOURCE_USER_PLACES, tmpdir);
-
 		assertTrue(loadFile(pathToDoc).contains(UUID_FOLDER_1));
 		assertTrue(loadFile(pathToDoc).contains(CAPTION_FOLDER_1));
-
 		assertDoesNotThrow(() -> {
-
 			var entry = new DolphinPlaces(tmpdir).add(Path.of(PATH_FOLDER_1), CAPTION_FOLDER_1);
-
 			assertFalse(loadFile(pathToDoc).contains(UUID_FOLDER_1));
 			assertTrue(loadFile(pathToDoc).contains(CAPTION_FOLDER_1));
-
 			entry.remove();
 		});
 	}
@@ -53,44 +48,29 @@ public class DolphinPlacesTest {
 	@Test
 	@DisplayName("Adding an identical entry should lead to a replacement of multiple existing entries")
 	public void addingAnIdenticalEntryShouldLeadToReplacementOfMultipleExistingEntry(@TempDir Path tmpdir)  {
-
 		var pathToDoc = loadResourceToDir(RESOURCE_USER_PLACES_MULTIPLE_IDENTICAL, tmpdir);
-
 		assertEquals(1, countOccurrences(loadFile(pathToDoc),UUID_FOLDER_1));
 		assertEquals(1, countOccurrences(loadFile(pathToDoc),UUID_FOLDER_1_IDENTICAL));
-
 		assertEquals(2, countOccurrences(loadFile(pathToDoc), CAPTION_FOLDER_1));
-
 		assertDoesNotThrow(() -> {
-
 			var entry = new DolphinPlaces(tmpdir).add(Path.of(PATH_FOLDER_1), CAPTION_FOLDER_1);
-
 			assertEquals(0, countOccurrences(loadFile(pathToDoc),UUID_FOLDER_1));
 			assertEquals(0, countOccurrences(loadFile(pathToDoc),UUID_FOLDER_1_IDENTICAL));
-
 			assertEquals(1, countOccurrences(loadFile(pathToDoc), CAPTION_FOLDER_1));
-
 			entry.remove();
 		});
-
 		assertEquals(0, countOccurrences(loadFile(pathToDoc), CAPTION_FOLDER_1));
 	}
 
 	@Test
 	@DisplayName("Adding should not replace if file is not valid")
 	public void addingShouldNotReplaceIfFileIsNotValid(@TempDir Path tmpdir) {
-
 		var pathToDoc = loadResourceToDir(RESOURCE_USER_PLACES_NOT_VALID, tmpdir);
-
 		assertEquals(1, countOccurrences(loadFile(pathToDoc), UUID_FOLDER_1));
 		assertEquals(1, countOccurrences(loadFile(pathToDoc), CAPTION_FOLDER_1));
-
 		assertThrows(QuickAccessServiceException.class, () -> {
-
 			new DolphinPlaces(tmpdir).add(Path.of(PATH_FOLDER_1), CAPTION_FOLDER_1);
-
 		});
-
 		assertEquals(1, countOccurrences(loadFile(pathToDoc), UUID_FOLDER_1));
 		assertEquals(1, countOccurrences(loadFile(pathToDoc), CAPTION_FOLDER_1));
 	}
@@ -98,18 +78,12 @@ public class DolphinPlacesTest {
 	@Test
 	@DisplayName("Adding should not replace if file is not well formed")
 	public void addingShouldNotReplaceIfFileIsNotWellFormed(@TempDir Path tmpdir) {
-
 		var pathToDoc = loadResourceToDir(RESOURCE_USER_PLACES_NOT_WELL_FORMED, tmpdir);
-
 		assertEquals(1, countOccurrences(loadFile(pathToDoc), UUID_FOLDER_1));
 		assertEquals(1, countOccurrences(loadFile(pathToDoc), CAPTION_FOLDER_1));
-
 		assertThrows(QuickAccessServiceException.class, () -> {
-
 			new DolphinPlaces(tmpdir).add(Path.of(PATH_FOLDER_1), CAPTION_FOLDER_1);
-
 		});
-
 		assertEquals(1, countOccurrences(loadFile(pathToDoc), UUID_FOLDER_1));
 		assertEquals(1, countOccurrences(loadFile(pathToDoc), CAPTION_FOLDER_1));
 	}
@@ -117,26 +91,18 @@ public class DolphinPlacesTest {
 	@Test
 	@DisplayName("Invalid characters in caption should be escaped")
 	public void invalidCharactersInCaptionShouldBeEscaped(@TempDir Path tmpdir) {
-
 		var pathToDoc = loadResourceToDir(RESOURCE_USER_PLACES, tmpdir);
-
 		assertEquals(0, countOccurrences(loadFile(pathToDoc), "&lt; &amp; &gt;"));
-
 		assertDoesNotThrow(() -> {
-
 			new DolphinPlaces(tmpdir).add(Path.of(PATH_FOLDER_1), "< & >");
-
 		});
-
 		assertEquals(1, countOccurrences(loadFile(pathToDoc), "&lt; &amp; &gt;"));
 	}
 
 	@Test
 	@DisplayName("The xml file root object should not be changed when adding an entry")
 	public void xmlFileRootObjectShouldNotBeChangedWhenAddingAnEntry(@TempDir Path tmpdir) throws IOException {
-
 		var pathToDoc = loadResourceToDir(RESOURCE_USER_PLACES, tmpdir);
-
 		var rootObject = """
 				<?xml version="1.0" encoding="UTF-8"?>
 				<!-- This file simulates a valid bookmark file -->
@@ -145,43 +111,30 @@ public class DolphinPlacesTest {
 				 xmlns:mime="http://www.freedesktop.org/standards/shared-mime-info">
 				
 				""".replaceAll("[\\r\\n\\t]", "");
-
-
 		assertDoesNotThrow(() -> {
-
 			new DolphinPlaces(tmpdir).add(Path.of(PATH_FOLDER_1), "my-caption");
-
 		});
-
 		var file = Files.readString(pathToDoc).replaceAll("[\\r\\n\\t]", "");
-
-		assertEquals(file.substring(0,rootObject.length()), rootObject, "Root object of the XML file should not be changed when adding an entry");
+		assertEquals(rootObject, file.substring(0,rootObject.length()), "Root object of the XML file should not be changed when adding an entry");
 	}
 
 
 	private Path loadResourceToDir(String source, Path targetDir)  {
-
 		try (var stream = this.getClass().getClassLoader().getResourceAsStream(source)) {
-
 			if (stream == null) {
 				throw new IOException("Resource not found: " + source);
 			}
-
 			Files.copy(stream, targetDir.resolve("user-places.xbel"), StandardCopyOption.REPLACE_EXISTING);
-
 			return targetDir.resolve("user-places.xbel");
-
 		} catch (IOException e) {
 			throw new RuntimeException("Failed to load resource: " + source, e);
 		}
 	}
 
 	private String loadFile(Path file) {
-
 		if (!Files.exists(file)) {
 			throw new RuntimeException("File does not exist: " + file);
 		}
-
 		try {
 			return Files.readString(file);
 		} catch (IOException e) {
@@ -197,7 +150,6 @@ public class DolphinPlacesTest {
 			count++;
 			index += searchString.length();
 		}
-
 		return count;
 	}
 }

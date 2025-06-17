@@ -62,12 +62,9 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 	private static final Schema XBEL_SCHEMA;
 
 	static {
-
 		try (var schemaDefinition = DolphinPlaces.class.getResourceAsStream("/xbel-1.0.xsd")) {
-
 			SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 			XBEL_SCHEMA = factory.newSchema(new StreamSource(schemaDefinition));
-
 		} catch (IOException | SAXException e) {
 			throw new IllegalStateException("Failed to load included XBEL schema definition file.", e);
 		}
@@ -86,29 +83,17 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 	EntryAndConfig addEntryToConfig(String config, Path target, String displayName) throws QuickAccessServiceException {
 
 		try {
-
-			String id = UUID.randomUUID().toString();
-
 			var validator = XBEL_SCHEMA.newValidator();
-
+			var id = UUID.randomUUID().toString();
 			LOG.trace("Adding bookmark for target: '{}', displayName: '{}', id: '{}'", target, displayName, id);
-
 			validator.validate(new StreamSource(new StringReader(config)));
-
-			Document xmlDocument = loadXmlDocument(config);
-
-			NodeList nodeList = extractBookmarksByPath(target, xmlDocument);
-
+			var xmlDocument = loadXmlDocument(config);
+			var nodeList = extractBookmarksByPath(target, xmlDocument);
 			removeStaleBookmarks(nodeList);
-
 			createBookmark(target, displayName, id, xmlDocument);
-
 			var changedConfig = documentToString(xmlDocument);
-
 			validator.validate(new StreamSource(new StringReader(changedConfig)));
-
 			return new EntryAndConfig(new DolphinPlacesEntry(id), changedConfig);
-
 		} catch (SAXException e) {
 			throw new QuickAccessServiceException("Invalid structure in xbel bookmark file", e);
 		} catch (IOException e) {
@@ -117,7 +102,6 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 	}
 
 	private void removeStaleBookmarks(NodeList nodeList) {
-
 		for (int i = nodeList.getLength() - 1; i >= 0; i--) {
 			Node node = nodeList.item(i);
 			node.getParentNode().removeChild(node);
@@ -125,97 +109,65 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 	}
 
 	private NodeList extractBookmarksByPath(Path target, Document xmlDocument) throws QuickAccessServiceException {
-
 		try {
-
-			XPathFactory xpathFactory = XPathFactory.newInstance();
-			XPath xpath = xpathFactory.newXPath();
-
-			SimpleVariableResolver variableResolver = new SimpleVariableResolver();
-
+			var xpathFactory = XPathFactory.newInstance();
+			var xpath = xpathFactory.newXPath();
+			var variableResolver = new SimpleVariableResolver();
 			variableResolver.addVariable(new QName("uri"), target.toUri().toString());
-
 			xpath.setXPathVariableResolver(variableResolver);
-
-			String expression = "/xbel/bookmark[info/metadata[@owner='https://cryptomator.org']][@href=$uri]";
-
+			var expression = "/xbel/bookmark[info/metadata[@owner='https://cryptomator.org']][@href=$uri]";
 			return (NodeList) xpath.compile(expression).evaluate(xmlDocument, XPathConstants.NODESET);
-
 		} catch (Exception e) {
 			throw new QuickAccessServiceException("Failed to extract bookmarks by path", e);
 		}
 	}
 
 	private NodeList extractBookmarksById(String id, Document xmlDocument) throws QuickAccessServiceException {
-
 		try {
-
-			XPathFactory xpathFactory = XPathFactory.newInstance();
-			XPath xpath = xpathFactory.newXPath();
-
-			SimpleVariableResolver variableResolver = new SimpleVariableResolver();
-
+			var xpathFactory = XPathFactory.newInstance();
+			var xpath = xpathFactory.newXPath();
+			var variableResolver = new SimpleVariableResolver();
 			variableResolver.addVariable(new QName("id"), id);
-
 			xpath.setXPathVariableResolver(variableResolver);
-
-			String expression = "/xbel/bookmark[info/metadata[@owner='https://cryptomator.org']][info/metadata/id[text()=$id]]";
-
+			var expression = "/xbel/bookmark[info/metadata[@owner='https://cryptomator.org']][info/metadata/id[text()=$id]]";
 			return (NodeList) xpath.compile(expression).evaluate(xmlDocument, XPathConstants.NODESET);
-
 		} catch (Exception e) {
   			throw new QuickAccessServiceException("Failed to extract bookmarks by id", e);
 		}
 	}
 
 	private Document loadXmlDocument(String config) throws QuickAccessServiceException {
-
 		try {
-
-			DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
-
+			var builderFactory = DocumentBuilderFactory.newInstance();
 			builderFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
 			builderFactory.setXIncludeAware(false);
 			builderFactory.setExpandEntityReferences(false);
 			builderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
 			builderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
 			builderFactory.setNamespaceAware(true);
-
 			DocumentBuilder builder = builderFactory.newDocumentBuilder();
-
 			// Prevent external entities from being resolved
 			builder.setEntityResolver((publicId, systemId) -> new InputSource(new StringReader("")));
-
 			return builder.parse(new ByteArrayInputStream(config.getBytes(StandardCharsets.UTF_8)));
-
 		} catch (Exception e) {
 			throw new QuickAccessServiceException("Failed to parse the xbel bookmark file", e);
 		}
 	}
 
 	private String documentToString(Document xmlDocument) throws QuickAccessServiceException {
-
 		try {
-
-			StringWriter buf = new StringWriter();
-
+			var buf = new StringWriter();
 			Transformer transformer = TransformerFactory.newInstance().newTransformer();
 			transformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, "");
 			transformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, "");
 			transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
-
 			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
 			transformer.setOutputProperty(OutputKeys.ENCODING, StandardCharsets.UTF_8.name());
-
 			transformer.transform(new DOMSource(xmlDocument), new StreamResult(buf));
-
 			var content = buf.toString();
-
 			content = content.replaceFirst("\\s*standalone=\"(yes|no)\"", "");
 			content = content.replaceFirst("<!DOCTYPE xbel PUBLIC \"\" \"\">","<!DOCTYPE xbel>");
-
 			return content;
-
 		} catch (Exception e) {
 			throw new QuickAccessServiceException("Failed to read document into string", e);
 		}
@@ -246,7 +198,6 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 	 * @throws QuickAccessServiceException if the bookmark could not be created
 	 */
 	private void createBookmark(Path target, String displayName, String id, Document xmlDocument) throws QuickAccessServiceException {
-
 		try {
 			var bookmark = xmlDocument.createElement("bookmark");
 			var title = xmlDocument.createElement("title");
@@ -255,29 +206,19 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 			var metadataOwner = xmlDocument.createElement("metadata");
 			var bookmarkIcon = xmlDocument.createElementNS(XBEL_NAMESPACE, "bookmark:icon");
 			var idElem = xmlDocument.createElement("id");
-
 			bookmark.setAttribute("href", target.toUri().toString());
-
 			title.setTextContent(displayName);
-
 			bookmark.appendChild(title);
 			bookmark.appendChild(info);
-
 			info.appendChild(metadataBookmark);
 			info.appendChild(metadataOwner);
-
 			metadataBookmark.appendChild(bookmarkIcon);
 			metadataOwner.appendChild(idElem);
-
 			metadataBookmark.setAttribute("owner", "http://freedesktop.org");
-
 			bookmarkIcon.setAttribute("name","drive-harddisk-encrypted");
-
 			metadataOwner.setAttribute("owner", "https://cryptomator.org");
-
 			idElem.setTextContent(id);
 			xmlDocument.getDocumentElement().appendChild(bookmark);
-
 		} catch (Exception e) {
 			throw new QuickAccessServiceException("Failed to insert bookmark for target: " + target, e);
 		}
@@ -293,24 +234,15 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 
 		@Override
 		public String removeEntryFromConfig(String config) throws QuickAccessServiceException {
-
 			try {
 				var validator = XBEL_SCHEMA.newValidator();
-
 				validator.validate(new StreamSource(new StringReader(config)));
-
-				Document xmlDocument = loadXmlDocument(config);
-
-				NodeList nodeList = extractBookmarksById(id, xmlDocument);
-
+				var xmlDocument = loadXmlDocument(config);
+				var nodeList = extractBookmarksById(id, xmlDocument);
 				removeStaleBookmarks(nodeList);
-
 				var changedConfig = documentToString(xmlDocument);
-
 				validator.validate(new StreamSource(new StringReader(changedConfig)));
-
 				return changedConfig;
-
 			} catch (IOException | SAXException | IllegalStateException e) {
 				throw new QuickAccessServiceException("Removing entry from KDE places file failed.", e);
 			}
