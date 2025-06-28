@@ -40,9 +40,10 @@
 
 		<!-- runtime dependencies -->
 
-		<api.version>1.6.0</api.version>
+		<api.version>1.7.0-SNAPSHOT</api.version>
 		<secret-service.version>2.0.1-alpha</secret-service.version>
 		<kdewallet.version>1.4.0</kdewallet.version>
+		<flatpakupdateportal.version>1.0-SNAPSHOT</flatpakupdateportal.version>
 		<slf4j.version>2.0.17</slf4j.version>
 		<appindicator.version>1.4.2</appindicator.version>
 
@@ -87,6 +88,11 @@
 			<groupId>org.purejava</groupId>
 			<artifactId>libappindicator-gtk3-java-minimal</artifactId>
 			<version>${appindicator.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.purejava</groupId>
+			<artifactId>flatpak-update-portal</artifactId>
+			<version>${flatpakupdateportal.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
