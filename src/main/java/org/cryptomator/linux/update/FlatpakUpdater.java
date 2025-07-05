@@ -5,11 +5,19 @@ import org.cryptomator.integrations.common.OperatingSystem;
 import org.cryptomator.integrations.common.Priority;
 import org.cryptomator.integrations.update.UpdateFailedException;
 import org.cryptomator.integrations.update.UpdateService;
+import org.freedesktop.dbus.FileDescriptor;
 import org.freedesktop.dbus.exceptions.DBusException;
+import org.freedesktop.dbus.types.UInt32;
+import org.freedesktop.dbus.types.Variant;
 import org.purejava.portal.Flatpak;
 import org.purejava.portal.UpdatePortal;
+import org.purejava.portal.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 @Priority(1000)
 @CheckAvailability
@@ -37,9 +45,16 @@ public class FlatpakUpdater implements UpdateService, AutoCloseable {
 
 	@Override
 	public void triggerUpdate() throws UpdateFailedException {
-		getUpdateMonitor();
-		//var monitor = getUpdateMonitor();
-		//portal.updateApp("x11:0", monitor, UpdatePortal.OPTIONS_DUMMY);
+		var cwdPath = Util.stringToByteList(System.getProperty("user.dir"));
+		List<List<Byte>> argv = List.of(
+				Util.stringToByteList("org.cryptomator.Cryptomator"));
+		Map<UInt32, FileDescriptor> fds = Collections.emptyMap();
+		Map<String, String> envs = Map.of();
+		var flags = new UInt32(0);
+		Map<String, Variant<?>> options = UpdatePortal.OPTIONS_DUMMY;
+
+		spawnApp(cwdPath, argv, fds, envs, flags, options);
+
 	}
 
 	@Override
@@ -56,7 +71,7 @@ public class FlatpakUpdater implements UpdateService, AutoCloseable {
 	public void close() throws Exception {
 		try {
 			if (null != updateMonitor) {
-				updateMonitor.Close();
+				portal.cancelUpdateMonitor(updateMonitor);
 			}
 			portal.close();
 		} catch (Exception e) {
@@ -86,5 +101,15 @@ public class FlatpakUpdater implements UpdateService, AutoCloseable {
 
 	public void notifyOnUpdateAvailable(Flatpak.UpdateMonitor.UpdateAvailable signal) {
 		LOG.info("Update available to remote-commit {}", signal.update_info.get("remote-commit").getValue());
+	}
+
+	private UInt32 spawnApp(List<Byte> cwdPath, List<List<Byte>> argv, Map<UInt32, FileDescriptor> fds, Map<String, String> envs, UInt32 flags, Map<String, Variant<?>> options) {
+		var pid = portal.Spawn(cwdPath, argv, fds, envs, flags, options);
+		if (null != pid) {
+			LOG.error("Spawning new application failed");
+		} else {
+			LOG.debug("New application spawned with PID {}", pid);
+		}
+		return pid;
 	}
 }
