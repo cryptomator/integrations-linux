@@ -31,6 +31,7 @@ public class FlatpakUpdater implements UpdateService, AutoCloseable {
 
 	public FlatpakUpdater() {
 		this.portal = new UpdatePortal();
+		portal.CreateUpdateMonitor(UpdatePortal.OPTIONS_DUMMY);
 	}
 
 	@Override
