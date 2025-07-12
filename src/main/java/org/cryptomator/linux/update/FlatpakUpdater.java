@@ -12,12 +12,15 @@ import org.freedesktop.dbus.types.Variant;
 import org.purejava.portal.Flatpak;
 import org.purejava.portal.UpdatePortal;
 import org.purejava.portal.Util;
+import org.purejava.portal.rest.UpdateCheckerTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Priority(1000)
 @CheckAvailability
@@ -25,6 +28,7 @@ import java.util.Map;
 public class FlatpakUpdater implements UpdateService, AutoCloseable {
 
 	private static final Logger LOG = LoggerFactory.getLogger(FlatpakUpdater.class);
+	private static final String APP_NAME = "org.cryptomator.Cryptomator";
 
 	private final UpdatePortal portal;
 	private Flatpak.UpdateMonitor updateMonitor;
@@ -41,6 +45,18 @@ public class FlatpakUpdater implements UpdateService, AutoCloseable {
 
 	@Override
 	public String isUpdateAvailable(DistributionChannel channel) {
+		if (channel != DistributionChannel.LINUX_FLATPAK) {
+			return "";
+		}
+		try (ExecutorService executor = Executors.newFixedThreadPool(10)) {
+			var task = new UpdateCheckerTask(APP_NAME);
+			executor.submit(task);
+			try {
+				return task.get();
+			} catch (Exception e) {
+				LOG.error(e.toString(), e.getCause());
+			}
+		}
 		return "";
 	}
 
@@ -105,12 +121,6 @@ public class FlatpakUpdater implements UpdateService, AutoCloseable {
 	}
 
 	private UInt32 spawnApp(List<Byte> cwdPath, List<List<Byte>> argv, Map<UInt32, FileDescriptor> fds, Map<String, String> envs, UInt32 flags, Map<String, Variant<?>> options) {
-		var pid = portal.Spawn(cwdPath, argv, fds, envs, flags, options);
-		if (null != pid) {
-			LOG.error("Spawning new application failed");
-		} else {
-			LOG.debug("New application spawned with PID {}", pid);
-		}
-		return pid;
+		return portal.Spawn(cwdPath, argv, fds, envs, flags, options);
 	}
 }
