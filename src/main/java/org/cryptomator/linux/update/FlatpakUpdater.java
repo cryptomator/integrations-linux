@@ -1,6 +1,7 @@
 package org.cryptomator.linux.update;
 
 import org.cryptomator.integrations.common.CheckAvailability;
+import org.cryptomator.integrations.common.DistributionChannel;
 import org.cryptomator.integrations.common.OperatingSystem;
 import org.cryptomator.integrations.common.Priority;
 import org.cryptomator.integrations.update.UpdateFailedException;
@@ -24,6 +25,7 @@ import java.util.concurrent.Executors;
 
 @Priority(1000)
 @CheckAvailability
+@DistributionChannel(DistributionChannel.Value.LINUX_FLATPAK)
 @OperatingSystem(OperatingSystem.Value.LINUX)
 public class FlatpakUpdater implements UpdateService, AutoCloseable {
 
@@ -44,9 +46,10 @@ public class FlatpakUpdater implements UpdateService, AutoCloseable {
 	}
 
 	@Override
-	public String isUpdateAvailable(DistributionChannel channel) {
-		if (channel != DistributionChannel.LINUX_FLATPAK) {
-			return "";
+	public String isUpdateAvailable(DistributionChannel.Value channel) {
+		if (channel != DistributionChannel.Value.LINUX_FLATPAK) {
+			LOG.error("Wrong channel provided: {}", channel);
+			return null;
 		}
 		try (ExecutorService executor = Executors.newFixedThreadPool(10)) {
 			var task = new UpdateCheckerTask(APP_NAME);
@@ -57,7 +60,7 @@ public class FlatpakUpdater implements UpdateService, AutoCloseable {
 				LOG.error(e.toString(), e.getCause());
 			}
 		}
-		return "";
+		return null;
 	}
 
 	@Override
