@@ -13,15 +13,12 @@ import org.freedesktop.dbus.types.Variant;
 import org.purejava.portal.Flatpak;
 import org.purejava.portal.UpdatePortal;
 import org.purejava.portal.Util;
-import org.purejava.portal.rest.UpdateCheckerTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 @Priority(1000)
 @CheckAvailability
@@ -51,16 +48,7 @@ public class FlatpakUpdater implements UpdateService, AutoCloseable {
 			LOG.error("Wrong channel provided: {}", channel);
 			return null;
 		}
-		try (ExecutorService executor = Executors.newFixedThreadPool(10)) {
-			var task = new UpdateCheckerTask(APP_NAME);
-			executor.submit(task);
-			try {
-				return task.get();
-			} catch (Exception e) {
-				LOG.error(e.toString(), e.getCause());
-			}
-		}
-		return null;
+		return portal.getlatestReleaseFor(APP_NAME);
 	}
 
 	@Override
