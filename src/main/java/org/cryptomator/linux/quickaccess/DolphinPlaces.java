@@ -19,14 +19,14 @@ import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
-import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
-import javax.xml.xpath.XPath;
+import javax.xml.validation.Validator;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 import javax.xml.xpath.XPathVariableResolver;
@@ -54,17 +54,15 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 
 	private static final String XBEL_NAMESPACE = "http://www.freedesktop.org/standards/desktop-bookmarks";
 	private static final int MAX_FILE_SIZE = 1 << 20; //1MiB, xml is quite verbose
-	private static final String HOME_DIR = System.getProperty("user.home");
-	private static final String CONFIG_PATH_IN_HOME = ".local/share";
-	private static final String CONFIG_FILE_NAME = "user-places.xbel";
-	private static final Path PLACES_FILE = Path.of(HOME_DIR,CONFIG_PATH_IN_HOME, CONFIG_FILE_NAME);
+	private static final Path PLACES_FILE = Path.of(System.getProperty("user.home"), ".local/share/user-places.xbel");
 
-	private static final Schema XBEL_SCHEMA;
+	private static final Validator XML_VALIDATOR;
 
 	static {
+		SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 		try (var schemaDefinition = DolphinPlaces.class.getResourceAsStream("/xbel-1.0.xsd")) {
-			SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-			XBEL_SCHEMA = factory.newSchema(new StreamSource(schemaDefinition));
+			Source schemaFile = new StreamSource(schemaDefinition);
+			XML_VALIDATOR = factory.newSchema(schemaFile).newValidator();
 		} catch (IOException | SAXException e) {
 			throw new IllegalStateException("Failed to load included XBEL schema definition file.", e);
 		}
@@ -76,23 +74,22 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 	}
 
 	public DolphinPlaces(Path configFilePath) {
-		super(configFilePath.resolve(CONFIG_FILE_NAME), MAX_FILE_SIZE);
+		super(configFilePath, MAX_FILE_SIZE);
 	}
 
 	@Override
 	EntryAndConfig addEntryToConfig(String config, Path target, String displayName) throws QuickAccessServiceException {
 
 		try {
-			var validator = XBEL_SCHEMA.newValidator();
 			var id = UUID.randomUUID().toString();
 			LOG.trace("Adding bookmark for target: '{}', displayName: '{}', id: '{}'", target, displayName, id);
-			validator.validate(new StreamSource(new StringReader(config)));
+			XML_VALIDATOR.validate(new StreamSource(new StringReader(config)));
 			var xmlDocument = loadXmlDocument(config);
 			var nodeList = extractBookmarksByPath(target, xmlDocument);
 			removeStaleBookmarks(nodeList);
 			createBookmark(target, displayName, id, xmlDocument);
 			var changedConfig = documentToString(xmlDocument);
-			validator.validate(new StreamSource(new StringReader(changedConfig)));
+			XML_VALIDATOR.validate(new StreamSource(new StringReader(changedConfig)));
 			return new EntryAndConfig(new DolphinPlacesEntry(id), changedConfig);
 		} catch (SAXException e) {
 			throw new QuickAccessServiceException("Invalid structure in xbel bookmark file", e);
@@ -235,13 +232,12 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 		@Override
 		public String removeEntryFromConfig(String config) throws QuickAccessServiceException {
 			try {
-				var validator = XBEL_SCHEMA.newValidator();
-				validator.validate(new StreamSource(new StringReader(config)));
+				XML_VALIDATOR.validate(new StreamSource(new StringReader(config)));
 				var xmlDocument = loadXmlDocument(config);
 				var nodeList = extractBookmarksById(id, xmlDocument);
 				removeStaleBookmarks(nodeList);
 				var changedConfig = documentToString(xmlDocument);
-				validator.validate(new StreamSource(new StringReader(changedConfig)));
+				XML_VALIDATOR.validate(new StreamSource(new StringReader(changedConfig)));
 				return changedConfig;
 			} catch (IOException | SAXException | IllegalStateException e) {
 				throw new QuickAccessServiceException("Removing entry from KDE places file failed.", e);

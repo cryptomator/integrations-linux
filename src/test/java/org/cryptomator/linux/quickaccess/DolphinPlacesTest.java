@@ -38,7 +38,7 @@ public class DolphinPlacesTest {
 		assertTrue(loadFile(pathToDoc).contains(UUID_FOLDER_1));
 		assertTrue(loadFile(pathToDoc).contains(CAPTION_FOLDER_1));
 		assertDoesNotThrow(() -> {
-			var entry = new DolphinPlaces(tmpdir).add(Path.of(PATH_FOLDER_1), CAPTION_FOLDER_1);
+			var entry = new DolphinPlaces(tmpdir.resolve("user-places.xbel")).add(Path.of(PATH_FOLDER_1), CAPTION_FOLDER_1);
 			assertFalse(loadFile(pathToDoc).contains(UUID_FOLDER_1));
 			assertTrue(loadFile(pathToDoc).contains(CAPTION_FOLDER_1));
 			entry.remove();
@@ -53,7 +53,7 @@ public class DolphinPlacesTest {
 		assertEquals(1, countOccurrences(loadFile(pathToDoc),UUID_FOLDER_1_IDENTICAL));
 		assertEquals(2, countOccurrences(loadFile(pathToDoc), CAPTION_FOLDER_1));
 		assertDoesNotThrow(() -> {
-			var entry = new DolphinPlaces(tmpdir).add(Path.of(PATH_FOLDER_1), CAPTION_FOLDER_1);
+			var entry = new DolphinPlaces(tmpdir.resolve("user-places.xbel")).add(Path.of(PATH_FOLDER_1), CAPTION_FOLDER_1);
 			assertEquals(0, countOccurrences(loadFile(pathToDoc),UUID_FOLDER_1));
 			assertEquals(0, countOccurrences(loadFile(pathToDoc),UUID_FOLDER_1_IDENTICAL));
 			assertEquals(1, countOccurrences(loadFile(pathToDoc), CAPTION_FOLDER_1));
@@ -69,7 +69,7 @@ public class DolphinPlacesTest {
 		assertEquals(1, countOccurrences(loadFile(pathToDoc), UUID_FOLDER_1));
 		assertEquals(1, countOccurrences(loadFile(pathToDoc), CAPTION_FOLDER_1));
 		assertThrows(QuickAccessServiceException.class, () -> {
-			new DolphinPlaces(tmpdir).add(Path.of(PATH_FOLDER_1), CAPTION_FOLDER_1);
+			new DolphinPlaces(tmpdir.resolve("user-places.xbel")).add(Path.of(PATH_FOLDER_1), CAPTION_FOLDER_1);
 		});
 		assertEquals(1, countOccurrences(loadFile(pathToDoc), UUID_FOLDER_1));
 		assertEquals(1, countOccurrences(loadFile(pathToDoc), CAPTION_FOLDER_1));
@@ -82,7 +82,7 @@ public class DolphinPlacesTest {
 		assertEquals(1, countOccurrences(loadFile(pathToDoc), UUID_FOLDER_1));
 		assertEquals(1, countOccurrences(loadFile(pathToDoc), CAPTION_FOLDER_1));
 		assertThrows(QuickAccessServiceException.class, () -> {
-			new DolphinPlaces(tmpdir).add(Path.of(PATH_FOLDER_1), CAPTION_FOLDER_1);
+			new DolphinPlaces(tmpdir.resolve("user-places.xbel")).add(Path.of(PATH_FOLDER_1), CAPTION_FOLDER_1);
 		});
 		assertEquals(1, countOccurrences(loadFile(pathToDoc), UUID_FOLDER_1));
 		assertEquals(1, countOccurrences(loadFile(pathToDoc), CAPTION_FOLDER_1));
@@ -94,7 +94,7 @@ public class DolphinPlacesTest {
 		var pathToDoc = loadResourceToDir(RESOURCE_USER_PLACES, tmpdir);
 		assertEquals(0, countOccurrences(loadFile(pathToDoc), "&lt; &amp; &gt;"));
 		assertDoesNotThrow(() -> {
-			new DolphinPlaces(tmpdir).add(Path.of(PATH_FOLDER_1), "< & >");
+			new DolphinPlaces(tmpdir.resolve("user-places.xbel")).add(Path.of(PATH_FOLDER_1), "< & >");
 		});
 		assertEquals(1, countOccurrences(loadFile(pathToDoc), "&lt; &amp; &gt;"));
 	}
@@ -112,7 +112,7 @@ public class DolphinPlacesTest {
 				
 				""".replaceAll("[\\r\\n\\t]", "");
 		assertDoesNotThrow(() -> {
-			new DolphinPlaces(tmpdir).add(Path.of(PATH_FOLDER_1), "my-caption");
+			new DolphinPlaces(tmpdir.resolve("user-places.xbel")).add(Path.of(PATH_FOLDER_1), "my-caption");
 		});
 		var file = Files.readString(pathToDoc).replaceAll("[\\r\\n\\t]", "");
 		assertEquals(rootObject, file.substring(0,rootObject.length()), "Root object of the XML file should not be changed when adding an entry");
