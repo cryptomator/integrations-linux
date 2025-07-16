@@ -83,7 +83,6 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 
 	@Override
 	EntryAndConfig addEntryToConfig(String config, Path target, String displayName) throws QuickAccessServiceException {
-
 		try {
 			var id = UUID.randomUUID().toString();
 			LOG.trace("Adding bookmark for target: '{}', displayName: '{}', id: '{}'", target, displayName, id);
