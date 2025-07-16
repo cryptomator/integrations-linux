@@ -8,6 +8,7 @@ import org.cryptomator.integrations.quickaccess.QuickAccessService;
 import org.cryptomator.integrations.quickaccess.QuickAccessServiceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -18,9 +19,11 @@ import javax.xml.XMLConstants;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
@@ -28,6 +31,7 @@ import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import javax.xml.xpath.XPathVariableResolver;
 import java.io.ByteArrayInputStream;
@@ -114,8 +118,8 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 			xpath.setXPathVariableResolver(variableResolver);
 			var expression = "/xbel/bookmark[info/metadata[@owner='https://cryptomator.org']][@href=$uri]";
 			return (NodeList) xpath.compile(expression).evaluate(xmlDocument, XPathConstants.NODESET);
-		} catch (Exception e) {
-			throw new QuickAccessServiceException("Failed to extract bookmarks by path", e);
+		} catch (XPathExpressionException xee) {
+			throw new QuickAccessServiceException("Invalid XPath expression", xee);
 		}
 	}
 
@@ -128,8 +132,8 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 			xpath.setXPathVariableResolver(variableResolver);
 			var expression = "/xbel/bookmark[info/metadata[@owner='https://cryptomator.org']][info/metadata/id[text()=$id]]";
 			return (NodeList) xpath.compile(expression).evaluate(xmlDocument, XPathConstants.NODESET);
-		} catch (Exception e) {
-  			throw new QuickAccessServiceException("Failed to extract bookmarks by id", e);
+		} catch (XPathExpressionException xee) {
+			throw new QuickAccessServiceException("Invalid XPath expression", xee);
 		}
 	}
 
@@ -146,8 +150,8 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 			// Prevent external entities from being resolved
 			builder.setEntityResolver((publicId, systemId) -> new InputSource(new StringReader("")));
 			return builder.parse(new ByteArrayInputStream(config.getBytes(StandardCharsets.UTF_8)));
-		} catch (Exception e) {
-			throw new QuickAccessServiceException("Failed to parse the xbel bookmark file", e);
+		} catch (IOException | SAXException | ParserConfigurationException e) {
+			throw new QuickAccessServiceException("Error while loading xml file", e);
 		}
 	}
 
@@ -165,8 +169,8 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 			content = content.replaceFirst("\\s*standalone=\"(yes|no)\"", "");
 			content = content.replaceFirst("<!DOCTYPE xbel PUBLIC \"\" \"\">","<!DOCTYPE xbel>");
 			return content;
-		} catch (Exception e) {
-			throw new QuickAccessServiceException("Failed to read document into string", e);
+		} catch (TransformerException e) {
+			throw new QuickAccessServiceException("Error while serializing document to string", e);
 		}
 	}
 
@@ -216,8 +220,8 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 			metadataOwner.setAttribute("owner", "https://cryptomator.org");
 			idElem.setTextContent(id);
 			xmlDocument.getDocumentElement().appendChild(bookmark);
-		} catch (Exception e) {
-			throw new QuickAccessServiceException("Failed to insert bookmark for target: " + target, e);
+		} catch (DOMException | IllegalArgumentException e) {
+			throw new QuickAccessServiceException("Error while creating bookmark for target: " + target, e);
 		}
 	}
 
