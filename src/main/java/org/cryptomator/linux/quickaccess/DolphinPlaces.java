@@ -251,7 +251,7 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 	/**
 	 * Resolver in order to define parameter for XPATH expression.
 	 */
-	private class SimpleVariableResolver implements XPathVariableResolver {
+	private static class SimpleVariableResolver implements XPathVariableResolver {
 
 		private final Map<QName, Object> vars = new HashMap<>();
 
