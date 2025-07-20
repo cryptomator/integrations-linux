@@ -13,6 +13,7 @@ import org.freedesktop.dbus.types.Variant;
 import org.purejava.portal.Flatpak;
 import org.purejava.portal.UpdatePortal;
 import org.purejava.portal.Util;
+import org.purejava.portal.rest.UpdateCheckerTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,12 +44,13 @@ public class FlatpakUpdater implements UpdateService, AutoCloseable {
 	}
 
 	@Override
-	public String isUpdateAvailable(DistributionChannel.Value channel) {
+	public UpdateCheckerTask getLatestReleaseChecker(DistributionChannel.Value channel) {
 		if (channel != DistributionChannel.Value.LINUX_FLATPAK) {
 			LOG.error("Wrong channel provided: {}", channel);
 			return null;
 		}
-		return portal.getlatestReleaseFor(APP_NAME);
+		portal.setUpdateCheckerTaskFor(APP_NAME);
+		return portal.getUpdateCheckerTaskFor(APP_NAME);
 	}
 
 	@Override
