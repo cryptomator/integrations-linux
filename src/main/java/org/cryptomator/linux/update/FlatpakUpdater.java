@@ -55,16 +55,21 @@ public class FlatpakUpdater implements UpdateService, AutoCloseable {
 
 	@Override
 	public void triggerUpdate() throws UpdateFailedException {
+		var monitor = getUpdateMonitor();
+		portal.updateApp("x11:0", monitor, UpdatePortal.OPTIONS_DUMMY);
+	}
+
+	@Override
+	public long spawnApp() {
 		var cwdPath = Util.stringToByteList(System.getProperty("user.dir"));
 		List<List<Byte>> argv = List.of(
-				Util.stringToByteList("org.cryptomator.Cryptomator"));
+				Util.stringToByteList(APP_NAME));
 		Map<UInt32, FileDescriptor> fds = Collections.emptyMap();
 		Map<String, String> envs = Map.of();
 		var flags = new UInt32(0);
 		Map<String, Variant<?>> options = UpdatePortal.OPTIONS_DUMMY;
 
-		spawnApp(cwdPath, argv, fds, envs, flags, options);
-
+		return spawnApp(cwdPath, argv, fds, envs, flags, options).longValue();
 	}
 
 	@Override
