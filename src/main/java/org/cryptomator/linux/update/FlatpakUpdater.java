@@ -4,6 +4,10 @@ import org.cryptomator.integrations.common.CheckAvailability;
 import org.cryptomator.integrations.common.DistributionChannel;
 import org.cryptomator.integrations.common.OperatingSystem;
 import org.cryptomator.integrations.common.Priority;
+import org.cryptomator.integrations.update.Progress;
+import org.cryptomator.integrations.update.ProgressListener;
+import org.cryptomator.integrations.update.UpdateAvailable;
+import org.cryptomator.integrations.update.UpdateAvailableListener;
 import org.cryptomator.integrations.update.UpdateFailedException;
 import org.cryptomator.integrations.update.UpdateService;
 import org.freedesktop.dbus.FileDescriptor;
@@ -20,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @Priority(1000)
 @CheckAvailability
@@ -29,6 +34,9 @@ public class FlatpakUpdater implements UpdateService, AutoCloseable {
 
 	private static final Logger LOG = LoggerFactory.getLogger(FlatpakUpdater.class);
 	private static final String APP_NAME = "org.cryptomator.Cryptomator";
+
+	private final List<UpdateAvailableListener> updateAvailableListeners = new CopyOnWriteArrayList<>();
+	private final List<ProgressListener> progressListeners = new CopyOnWriteArrayList<>();
 
 	private final UpdatePortal portal;
 	private Flatpak.UpdateMonitor updateMonitor;
@@ -104,6 +112,9 @@ public class FlatpakUpdater implements UpdateService, AutoCloseable {
 					portal.getDBusConnection().addSigHandler(Flatpak.UpdateMonitor.UpdateAvailable.class, signal -> {
 						notifyOnUpdateAvailable(signal);
 					});
+					portal.getDBusConnection().addSigHandler(Flatpak.UpdateMonitor.Progress.class, signal -> {
+						notifyOnUpdateProceeds(signal);
+					});
 				} catch (DBusException e) {
 					LOG.error(e.toString(), e.getCause());
 				}
@@ -114,8 +125,40 @@ public class FlatpakUpdater implements UpdateService, AutoCloseable {
 		return updateMonitor;
 	}
 
-	public void notifyOnUpdateAvailable(Flatpak.UpdateMonitor.UpdateAvailable signal) {
-		LOG.info("Update available to remote-commit {}", signal.update_info.get("remote-commit").getValue());
+	@Override
+	public void addUpdateAvailableListener(UpdateAvailableListener listener) {
+		updateAvailableListeners.add(listener);
+	}
+
+	@Override
+	public void removeUpdateAvailableListener(UpdateAvailableListener listener) {
+		updateAvailableListeners.remove(listener);
+	}
+
+	private void notifyOnUpdateAvailable(Flatpak.UpdateMonitor.UpdateAvailable signal) {
+		UpdateAvailable updateAvailable = new UpdateAvailable((String) signal.update_info.get("remote-commit").getValue());
+		for (UpdateAvailableListener listener : updateAvailableListeners) {
+			listener.onUpdateAvailable(updateAvailable);
+		}
+	}
+
+	@Override
+	public void addProgressListener(ProgressListener listener) {
+		progressListeners.add(listener);
+	}
+
+	@Override
+	public void removeProgressListener(ProgressListener listener) {
+		progressListeners.remove(listener);
+	}
+
+	private void notifyOnUpdateProceeds(Flatpak.UpdateMonitor.Progress signal) {
+			long status = ((UInt32) signal.info.get("status").getValue()).longValue();
+			long progress = ((UInt32) signal.info.get("progress").getValue()).longValue();
+			Progress p = new Progress(status, progress);
+		for (ProgressListener listener : progressListeners) {
+			listener.onProgress(p);
+		}
 	}
 
 	private UInt32 spawnApp(List<Byte> cwdPath, List<List<Byte>> argv, Map<UInt32, FileDescriptor> fds, Map<String, String> envs, UInt32 flags, Map<String, Variant<?>> options) {
