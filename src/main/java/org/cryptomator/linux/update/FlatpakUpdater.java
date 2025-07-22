@@ -153,9 +153,13 @@ public class FlatpakUpdater implements UpdateService, AutoCloseable {
 	}
 
 	private void notifyOnUpdateProceeds(Flatpak.UpdateMonitor.Progress signal) {
-			long status = ((UInt32) signal.info.get("status").getValue()).longValue();
-			long progress = ((UInt32) signal.info.get("progress").getValue()).longValue();
-			Progress p = new Progress(status, progress);
+		long status = ((UInt32) signal.info.get("status").getValue()).longValue();
+		long progress = 0;
+		Variant<?> progressVariant = signal.info.get("progress");
+		if (null != progressVariant) {
+			progress = ((UInt32) progressVariant.getValue()).longValue();
+		}
+		Progress p = new Progress(status, progress);
 		for (ProgressListener listener : progressListeners) {
 			listener.onProgress(p);
 		}
