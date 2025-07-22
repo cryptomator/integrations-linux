@@ -33,7 +33,6 @@ import javax.xml.validation.Validator;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
-import javax.xml.xpath.XPathVariableResolver;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringReader;
@@ -41,8 +40,6 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -112,9 +109,12 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 		try {
 			var xpathFactory = XPathFactory.newInstance();
 			var xpath = xpathFactory.newXPath();
-			var variableResolver = new SimpleVariableResolver();
-			variableResolver.addVariable(new QName("uri"), target.toUri().toString());
-			xpath.setXPathVariableResolver(variableResolver);
+			xpath.setXPathVariableResolver(v -> {
+				if (v.equals(new QName("uri"))) {
+					return target.toUri().toString();
+				}
+				throw new IllegalArgumentException();
+			});
 			var expression = "/xbel/bookmark[info/metadata[@owner='https://cryptomator.org']][@href=$uri]";
 			return (NodeList) xpath.compile(expression).evaluate(xmlDocument, XPathConstants.NODESET);
 		} catch (XPathExpressionException xee) {
@@ -126,9 +126,12 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 		try {
 			var xpathFactory = XPathFactory.newInstance();
 			var xpath = xpathFactory.newXPath();
-			var variableResolver = new SimpleVariableResolver();
-			variableResolver.addVariable(new QName("id"), id);
-			xpath.setXPathVariableResolver(variableResolver);
+			xpath.setXPathVariableResolver(v -> {
+				if (v.equals(new QName("id"))) {
+					return id;
+				}
+				throw new IllegalArgumentException();
+			});
 			var expression = "/xbel/bookmark[info/metadata[@owner='https://cryptomator.org']][info/metadata/id[text()=$id]]";
 			return (NodeList) xpath.compile(expression).evaluate(xmlDocument, XPathConstants.NODESET);
 		} catch (XPathExpressionException xee) {
@@ -235,7 +238,6 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 		@Override
 		public String removeEntryFromConfig(String config) throws QuickAccessServiceException {
 			try {
-				XML_VALIDATOR.validate(new StreamSource(new StringReader(config)));
 				var xmlDocument = loadXmlDocument(config);
 				var nodeList = extractBookmarksById(id, xmlDocument);
 				removeStaleBookmarks(nodeList);
@@ -245,34 +247,6 @@ public class DolphinPlaces extends FileConfiguredQuickAccess implements QuickAcc
 			} catch (IOException | SAXException | IllegalStateException e) {
 				throw new QuickAccessServiceException("Removing entry from KDE places file failed.", e);
 			}
-		}
-	}
-
-	/**
-	 * Resolver in order to define parameter for XPATH expression.
-	 */
-	private static class SimpleVariableResolver implements XPathVariableResolver {
-
-		private final Map<QName, Object> vars = new HashMap<>();
-
-		/**
-		 * Adds a variable to the resolver.
-		 *
-		 * @param name  The name of the variable
-		 * @param value The value of the variable
-		 */
-		public void addVariable(QName name, Object value) {
-			vars.put(name, value);
-		}
-
-		/**
-		 * Resolves a variable by its name.
-		 *
-		 * @param variableName The name of the variable to resolve
-		 * @return The value of the variable, or null if not found
-		 */
-		public Object resolveVariable(QName variableName) {
-			return vars.get(variableName);
 		}
 	}
 
