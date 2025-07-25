@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This file simulates a non well-formed document (see line 9 to 11)-->
+<!DOCTYPE xbel>
+<xbel xmlns:bookmark="http://www.freedesktop.org/standards/desktop-bookmarks" xmlns:kdepriv="http://www.kde.org/kdepriv"
+	  xmlns:mime="http://www.freedesktop.org/standards/shared-mime-info">
+	<brokenbookmark href="file:///home/someuser/folder1">
+		<title>folder 1</title>
+		<info>
+			metadata owner="http://freedesktop.org">
+				bookmark:icon name="drive-harddisk-encrypted"/>
+			/metadata>
+			<metadata owner="https://cryptomator.org">
+				<id>c4b72799-ca67-4c2e-b727-99ca67dc2e5d</id>
+			</metadata>
+		</info>
+	</brokenbookmark>
+	<bookmark href="file:///home/someuser/folder2">
+		<title>folder 2</title>
+		<info>
+			<metadata owner="http://freedesktop.org">
+				<bookmark:icon name="drive-harddisk-encrypted"/>
+			</metadata>
+			<metadata owner="https://cryptomator.org">
+				<id>50e2de06-d9c7-4f45-a2de-06d9c75f4523</id>
+			</metadata>
+		</info>
+	</bookmark>
+	<bookmark href="file:///home/someuser/folder3">
+		<title>folder 3</title>
+		<info>
+			<metadata owner="http://freedesktop.org">
+				<bookmark:icon name="drive-harddisk-encrypted"/>
+			</metadata>
+			<metadata owner="https://anotherapp.org">
+				<id>8ce76c5d-62b3-44c1-a76c-5d62b3a4c1f2</id>
+			</metadata>
+		</info>
+	</bookmark>
+</xbel>
