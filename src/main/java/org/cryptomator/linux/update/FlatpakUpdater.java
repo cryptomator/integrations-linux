@@ -15,6 +15,7 @@ import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.types.UInt32;
 import org.freedesktop.dbus.types.Variant;
 import org.purejava.portal.Flatpak;
+import org.purejava.portal.FlatpakSpawnFlag;
 import org.purejava.portal.UpdatePortal;
 import org.purejava.portal.Util;
 import org.purejava.portal.rest.UpdateCheckerTask;
@@ -74,7 +75,7 @@ public class FlatpakUpdater implements UpdateService, AutoCloseable {
 				Util.stringToByteList(APP_NAME));
 		Map<UInt32, FileDescriptor> fds = Collections.emptyMap();
 		Map<String, String> envs = Map.of();
-		var flags = new UInt32(0);
+		UInt32 flags = new UInt32(FlatpakSpawnFlag.LATEST_VERSION.getValue());
 		Map<String, Variant<?>> options = UpdatePortal.OPTIONS_DUMMY;
 
 		return spawnApp(cwdPath, argv, fds, envs, flags, options).longValue();
