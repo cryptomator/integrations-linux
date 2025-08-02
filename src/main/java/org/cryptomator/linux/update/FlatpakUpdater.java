@@ -1,15 +1,11 @@
 package org.cryptomator.linux.update;
 
 import org.cryptomator.integrations.common.CheckAvailability;
-import org.cryptomator.integrations.common.DistributionChannel;
+import org.cryptomator.integrations.common.DisplayName;
 import org.cryptomator.integrations.common.OperatingSystem;
 import org.cryptomator.integrations.common.Priority;
 import org.cryptomator.integrations.update.Progress;
 import org.cryptomator.integrations.update.ProgressListener;
-import org.cryptomator.integrations.update.SpawnExitedListener;
-import org.cryptomator.integrations.update.SpawnStartedListener;
-import org.cryptomator.integrations.update.UpdateAvailable;
-import org.cryptomator.integrations.update.UpdateAvailableListener;
 import org.cryptomator.integrations.update.UpdateFailedException;
 import org.cryptomator.integrations.update.UpdateService;
 import org.freedesktop.dbus.FileDescriptor;
@@ -31,17 +27,14 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 @Priority(1000)
 @CheckAvailability
-@DistributionChannel(DistributionChannel.Value.LINUX_FLATPAK)
+@DisplayName("Update via Flatpak update")
 @OperatingSystem(OperatingSystem.Value.LINUX)
 public class FlatpakUpdater implements UpdateService, AutoCloseable {
 
 	private static final Logger LOG = LoggerFactory.getLogger(FlatpakUpdater.class);
 	private static final String APP_NAME = "org.cryptomator.Cryptomator";
 
-	private final List<UpdateAvailableListener> updateAvailableListeners = new CopyOnWriteArrayList<>();
 	private final List<ProgressListener> progressListeners = new CopyOnWriteArrayList<>();
-	private final List<SpawnStartedListener> spawnStartedListeners = new CopyOnWriteArrayList<>();
-	private final List<SpawnExitedListener> spawnExitedListeners = new CopyOnWriteArrayList<>();
 
 	private final UpdatePortal portal;
 	private Flatpak.UpdateMonitor updateMonitor;
@@ -57,11 +50,7 @@ public class FlatpakUpdater implements UpdateService, AutoCloseable {
 	}
 
 	@Override
-	public UpdateCheckerTask getLatestReleaseChecker(DistributionChannel.Value channel) {
-		if (channel != DistributionChannel.Value.LINUX_FLATPAK) {
-			LOG.error("Wrong channel provided: {}", channel);
-			return null;
-		}
+	public UpdateCheckerTask getLatestReleaseChecker() {
 		portal.setUpdateCheckerTaskFor(APP_NAME);
 		return portal.getUpdateCheckerTaskFor(APP_NAME);
 	}
@@ -91,11 +80,6 @@ public class FlatpakUpdater implements UpdateService, AutoCloseable {
 	}
 
 	@Override
-	public String getDisplayName() {
-		return "Update via Flatpak update";
-	}
-
-	@Override
 	public void close() throws Exception {
 		try {
 			if (null != updateMonitor) {
@@ -114,9 +98,6 @@ public class FlatpakUpdater implements UpdateService, AutoCloseable {
 				LOG.debug("UpdateMonitor successful created at {}", updateMonitorPath);
 				updateMonitor = portal.getUpdateMonitor(updateMonitorPath.toString());
 				try {
-					portal.getDBusConnection().addSigHandler(Flatpak.UpdateMonitor.UpdateAvailable.class, signal -> {
-						notifyOnUpdateAvailable(signal);
-					});
 					portal.getDBusConnection().addSigHandler(Flatpak.UpdateMonitor.Progress.class, signal -> {
 						notifyOnUpdateProceeds(signal);
 					});
@@ -131,16 +112,6 @@ public class FlatpakUpdater implements UpdateService, AutoCloseable {
 	}
 
 	@Override
-	public void addUpdateAvailableListener(UpdateAvailableListener listener) {
-		updateAvailableListeners.add(listener);
-	}
-
-	@Override
-	public void removeUpdateAvailableListener(UpdateAvailableListener listener) {
-		updateAvailableListeners.remove(listener);
-	}
-
-	@Override
 	public void addProgressListener(ProgressListener listener) {
 		progressListeners.add(listener);
 	}
@@ -150,48 +121,6 @@ public class FlatpakUpdater implements UpdateService, AutoCloseable {
 		progressListeners.remove(listener);
 	}
 
-	@Override
-	public void addSpawnStartedListener(SpawnStartedListener listener) {
-		spawnStartedListeners.add(listener);
-	}
-
-	@Override
-	public void removeSpawnStartedListener(SpawnStartedListener listener) {
-		spawnStartedListeners.remove(listener);
-	}
-
-	@Override
-	public void addSpawnExitedListener(SpawnExitedListener listener) {
-		spawnExitedListeners.add(listener);
-	}
-
-	@Override
-	public void removeSpawnExitedListener(SpawnExitedListener listener) {
-		spawnExitedListeners.remove(listener);
-	}
-
-	private void notifyOnUpdateAvailable(Flatpak.UpdateMonitor.UpdateAvailable signal) {
-		String remoteCommit = "";
-		Variant<?> remoteCommitVariant = signal.update_info.get("remote-commit");
-		if (null != remoteCommitVariant) {
-			remoteCommit = (String) remoteCommitVariant.getValue();
-		}
-		String runningCommit = "";
-		Variant<?> runningCommitVariant = signal.update_info.get("running-commit");
-		if (null != runningCommitVariant) {
-			runningCommit = (String) runningCommitVariant.getValue();
-		}
-		String localCommit = "";
-		Variant<?> localCommitVariant = signal.update_info.get("local-commit");
-		if (null != localCommitVariant) {
-			localCommit = (String) localCommitVariant.getValue();
-		}
-		UpdateAvailable updateAvailable = new UpdateAvailable(runningCommit, localCommit, remoteCommit);
-		for (UpdateAvailableListener listener : updateAvailableListeners) {
-			listener.onUpdateAvailable(updateAvailable);
-		}
-	}
-
 	private void notifyOnUpdateProceeds(Flatpak.UpdateMonitor.Progress signal) {
 		long status = ((UInt32) signal.info.get("status").getValue()).longValue();
 		long progress = 0;
@@ -199,27 +128,7 @@ public class FlatpakUpdater implements UpdateService, AutoCloseable {
 		if (null != progressVariant) {
 			progress = ((UInt32) progressVariant.getValue()).longValue();
 		}
-		long nOps = -1;
-		Variant<?> nOpsVariant = signal.info.get("n_ops");
-		if (null != nOpsVariant) {
-			nOps = ((UInt32) nOpsVariant.getValue()).longValue();
-		}
-		long oP = -1;
-		Variant<?> oPVariant = signal.info.get("op");
-		if (null != oPVariant) {
-			oP = ((UInt32) oPVariant.getValue()).longValue();
-		}
-		String error = "";
-		Variant<?> errorVariant = signal.info.get("error");
-		if (null != errorVariant) {
-			error = (String) errorVariant.getValue();
-		}
-		String errorMessage = "";
-		Variant<?> errorMessageVariant = signal.info.get("error_message");
-		if (null != errorMessageVariant) {
-			errorMessage = (String) errorMessageVariant.getValue();
-		}
-		Progress p = new Progress(nOps, oP, status, progress, error, errorMessage);
+		Progress p = new Progress(status, progress);
 		for (ProgressListener listener : progressListeners) {
 			listener.onProgress(p);
 		}
