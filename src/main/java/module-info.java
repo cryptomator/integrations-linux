@@ -3,7 +3,7 @@ import org.cryptomator.integrations.keychain.KeychainAccessProvider;
 import org.cryptomator.integrations.quickaccess.QuickAccessService;
 import org.cryptomator.integrations.revealpath.RevealPathService;
 import org.cryptomator.integrations.tray.TrayMenuController;
-import org.cryptomator.integrations.update.UpdateService;
+import org.cryptomator.integrations.update.UpdateMechanism;
 import org.cryptomator.linux.autostart.FreedesktopAutoStartService;
 import org.cryptomator.linux.keychain.GnomeKeyringKeychainAccess;
 import org.cryptomator.linux.keychain.KDEWalletKeychainAccess;
@@ -28,7 +28,7 @@ module org.cryptomator.integrations.linux {
 	provides RevealPathService with DBusSendRevealPathService;
 	provides TrayMenuController with AppindicatorTrayMenuController;
 	provides QuickAccessService with NautilusBookmarks, DolphinPlaces;
-	provides UpdateService with FlatpakUpdater;
+	provides UpdateMechanism with FlatpakUpdater;
 
 	opens org.cryptomator.linux.tray to org.cryptomator.integrations.api;
 	opens org.cryptomator.linux.quickaccess to org.cryptomator.integrations.api;
