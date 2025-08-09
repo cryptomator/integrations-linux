@@ -49,13 +49,13 @@ public class FlatpakUpdater implements UpdateMechanism {
 	}
 
 	@Override
-	public boolean isUpdateAvailable() {
+	public boolean isUpdateAvailable(String installedVersion) {
 		var cdl = new CountDownLatch(1);
 		portal.setUpdateCheckerTaskFor(APP_NAME);
 		var checkTask = portal.getUpdateCheckerTaskFor(APP_NAME);
 		var updateAvailable = new AtomicBoolean(false);
-		checkTask.setOnSucceeded(latestVersion -> {
-			updateAvailable.set(true); // TODO: compare version strings before setting this to true
+		checkTask.setOnSucceeded(updateVersion -> {
+			updateAvailable.set(UpdateMechanism.isUpdateAvailable(updateVersion, installedVersion));
 			cdl.countDown();
 		});
 		checkTask.setOnFailed(error -> {
