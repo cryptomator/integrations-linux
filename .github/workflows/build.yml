@@ -32,3 +32,5 @@ jobs:
           prerelease: true
           token: ${{ secrets.CRYPTOBOT_RELEASE_TOKEN }}
           generate_release_notes: true
+          body: |
+            For a list of all notable changes, read the [changelog](/CHANGELOG.md).
