@@ -11,6 +11,7 @@ Changes to prior versions can be found on the [Github release page](https://gith
 
 ### Changed
 
+* Updated `org.cryptomator:integrations-api` from 1.6.0 to 1.7.0
 * Refactor Dolphin quick access integration for robustness (#114)
 
 ### Fixed
