@@ -9,6 +9,10 @@ Changes to prior versions can be found on the [Github release page](https://gith
 
 ## [Unreleased]
 
+No changes yet.
+
+## [1.6.1] - 2025-09-17
+
 ### Changed
 
 * Updated `org.cryptomator:integrations-api` from 1.6.0 to 1.7.0
