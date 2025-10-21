@@ -6,7 +6,7 @@ import org.cryptomator.integrations.common.OperatingSystem;
 import org.cryptomator.integrations.common.Priority;
 import org.cryptomator.integrations.update.UpdateFailedException;
 import org.cryptomator.integrations.update.UpdateMechanism;
-import org.cryptomator.integrations.update.UpdateProcess;
+import org.cryptomator.integrations.update.UpdateStep;
 import org.freedesktop.dbus.FileDescriptor;
 import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.types.UInt32;
@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -73,16 +72,16 @@ public class FlatpakUpdater implements UpdateMechanism {
 	}
 
 	@Override
-	public UpdateProcess prepareUpdate() throws UpdateFailedException {
+	public UpdateStep firstStep() throws UpdateFailedException {
 		var monitorPath = portal.CreateUpdateMonitor(UpdatePortal.OPTIONS_DUMMY);
 		if (monitorPath == null) {
 			throw new UpdateFailedException("Failed to create UpdateMonitor on DBus");
 		}
 
-		return new FlatpakUpdateProcess(portal.getUpdateMonitor(monitorPath.toString()));
+		return new FlatpakUpdateStep(portal.getUpdateMonitor(monitorPath.toString()));
 	}
 
-	private class FlatpakUpdateProcess implements UpdateProcess {
+	private class FlatpakUpdateStep implements UpdateStep {
 
 		private final CountDownLatch latch = new CountDownLatch(1);
 		private final Flatpak.UpdateMonitor monitor;
@@ -90,12 +89,17 @@ public class FlatpakUpdater implements UpdateMechanism {
 		private volatile UpdateFailedException error;
 		private AutoCloseable signalHandler;
 
-		private FlatpakUpdateProcess(Flatpak.UpdateMonitor monitor) {
+		private FlatpakUpdateStep(Flatpak.UpdateMonitor monitor) {
 			this.monitor = monitor;
-			startUpdate();
 		}
 
-		private void startUpdate() {
+		@Override
+		public String description() {
+			return "Updating via Flatpak... %1.0f%%".formatted(preparationProgress() * 100);
+		}
+
+		@Override
+		public void start() {
 			try {
 				this.signalHandler = portal.getDBusConnection().addSigHandler(Flatpak.UpdateMonitor.Progress.class, this::handleProgressSignal);
 			} catch (DBusException e) {
@@ -167,7 +171,8 @@ public class FlatpakUpdater implements UpdateMechanism {
 			return latch.await(timeout, unit);
 		}
 
-		private boolean isDone() {
+		@Override
+		public boolean isDone() {
 			try {
 				return latch.await(0, TimeUnit.MILLISECONDS);
 			} catch (InterruptedException e) {
@@ -177,7 +182,11 @@ public class FlatpakUpdater implements UpdateMechanism {
 		}
 
 		@Override
-		public ProcessHandle applyUpdate() throws IllegalStateException, IOException {
+		public UpdateStep nextStep() throws IllegalStateException, IOException {
+			return UpdateStep.of("Restarting application", this::applyUpdate);
+		}
+
+		public UpdateStep applyUpdate() throws IllegalStateException, IOException {
 			if (!isDone()) {
 				throw new IllegalStateException("Update preparation is not complete");
 			}
@@ -195,7 +204,8 @@ public class FlatpakUpdater implements UpdateMechanism {
 			UInt32 flags = new UInt32(FlatpakSpawnFlag.LATEST_VERSION.getValue());
 			Map<String, Variant<?>> options = UpdatePortal.OPTIONS_DUMMY;
 			var pid = portal.Spawn(cwdPath, argv, fds, envs, flags, options).longValue();
-			return ProcessHandle.of(pid).orElseThrow();
+			LOG.info("Spawned updated Cryptomator process with PID {}", pid);
+			return null;
 		}
 	}
 
