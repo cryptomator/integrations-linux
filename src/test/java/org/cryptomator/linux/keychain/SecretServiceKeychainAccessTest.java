@@ -52,18 +52,19 @@ public class SecretServiceKeychainAccessTest {
 	class FunctionalTests {
 
 		static final String KEY_ID = "cryptomator-test-" + UUID.randomUUID();
-		final SecretServiceKeychainAccess keyring = new SecretServiceKeychainAccess();
+		final static SecretServiceKeychainAccess KEYRING = new SecretServiceKeychainAccess();
 
 		@Test
 		@Order(1)
 		public void testStore() throws KeychainAccessException {
-			keyring.storePassphrase(KEY_ID, "cryptomator-test", "p0ssw0rd");
+			KEYRING.isSupported(); // ensure encrypted session
+			KEYRING.storePassphrase(KEY_ID, "cryptomator-test", "p0ssw0rd");
 		}
 
 		@Test
 		@Order(2)
 		public void testLoad() throws KeychainAccessException {
-			var passphrase = keyring.loadPassphrase(KEY_ID);
+			var passphrase = KEYRING.loadPassphrase(KEY_ID);
 			Assertions.assertNotNull(passphrase);
 			Assertions.assertEquals("p0ssw0rd", String.copyValueOf(passphrase));
 		}
@@ -71,13 +72,13 @@ public class SecretServiceKeychainAccessTest {
 		@Test
 		@Order(3)
 		public void testDelete() throws KeychainAccessException {
-			keyring.deletePassphrase(KEY_ID);
+			KEYRING.deletePassphrase(KEY_ID);
 		}
 
 		@Test
 		@Order(4)
 		public void testLoadNotExisting() throws KeychainAccessException {
-			var result = keyring.loadPassphrase(KEY_ID);
+			var result = KEYRING.loadPassphrase(KEY_ID);
 			Assertions.assertNull(result);
 		}
 
