@@ -30,6 +30,11 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 		session.getService().addCollectionChangedHandler(collection -> LOG.debug("Collection {} changed", collection.getPath()));
 		session.getService().addCollectionCreatedHandler(collection -> LOG.debug("Collection {} created", collection.getPath()));
 		session.getService().addCollectionDeletedHandler(collection -> LOG.debug("Collection {} deleted", collection.getPath()));
+		var getAlias = session.getService().readAlias("default");
+		if (getAlias.isSuccess() && "/".equals(getAlias.value().getPath())) {
+			// default alias is not set; set it to the login keyring
+			session.getService().setAlias("default", new DBusPath(Static.DBusPath.LOGIN_COLLECTION));
+		}
 		collection.addItemChangedHandler(item -> LOG.debug("Item {} changed", item.getPath()));
 		collection.addItemCreatedHandler(item -> LOG.debug("Item {} created", item.getPath()));
 		collection.addItemDeletedHandler(item -> LOG.debug("Item {} deleted", item.getPath()));
