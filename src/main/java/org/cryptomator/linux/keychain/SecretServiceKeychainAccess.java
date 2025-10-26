@@ -13,6 +13,12 @@ import org.purejava.secret.api.Static;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +44,8 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 		collection.addItemChangedHandler(item -> LOG.debug("Item {} changed", item.getPath()));
 		collection.addItemCreatedHandler(item -> LOG.debug("Item {} created", item.getPath()));
 		collection.addItemDeletedHandler(item -> LOG.debug("Item {} deleted", item.getPath()));
+
+		migrateKDEWalletEntries();
 	}
 
 	@Override
@@ -151,5 +159,34 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 
 	private Map<String, String> createAttributes(String key) {
 		return Map.of("Vault", key);
+	}
+
+	private void migrateKDEWalletEntries() {
+		session.setupEncryptedSession();
+		var getItems = collection.getItems();
+		if (getItems.isSuccess() && !getItems.value().isEmpty()) {
+			for (DBusPath i : getItems.value()) {
+				session.getService().ensureUnlocked(i);
+				var attribs = new Item(i).getAttributes();
+				if (attribs.isSuccess() &&
+						attribs.value().containsKey("server") &&
+						attribs.value().containsKey("user") &&
+						attribs.value().get("server").equals("Cryptomator")) {
+
+					session.getService().ensureUnlocked(i);
+					var item = new Item(i);
+					var secret = item.getSecret(session.getSession());
+ 					try {
+						storePassphrase(attribs.value().get("user"), "Cryptomator", new String(session.decrypt(secret)));
+					} catch (KeychainAccessException | NoSuchPaddingException | NoSuchAlgorithmException |
+							 InvalidAlgorithmParameterException | InvalidKeyException | BadPaddingException |
+							 IllegalBlockSizeException e) {
+						LOG.error("Migrating entry {} for vault {} failed", i.getPath(), attribs.value().get("user"));
+					 }
+					 item.delete();
+					 LOG.info("Successfully migrated password for vault {}", attribs.value().get("user"));
+				}
+			}
+		}
 	}
 }
