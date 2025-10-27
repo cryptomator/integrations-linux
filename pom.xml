@@ -41,7 +41,7 @@
 		<!-- runtime dependencies -->
 
 		<api.version>1.7.0</api.version>
-		<secret-service.version>1.0.0-SNAPSHOT</secret-service.version>
+		<secret-service.version>1.0.0</secret-service.version>
 		<slf4j.version>2.0.17</slf4j.version>
 		<appindicator.version>1.4.2</appindicator.version>
 
