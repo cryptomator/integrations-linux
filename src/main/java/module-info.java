@@ -21,7 +21,6 @@ module org.cryptomator.integrations.linux {
 	requires de.swiesend.secretservice;
 	requires org.purejava.secret;
 	requires java.xml;
-	requires org.cryptomator.integrations.linux;
 
 	provides AutoStartProvider with FreedesktopAutoStartService;
 	provides KeychainAccessProvider with SecretServiceKeychainAccess, GnomeKeyringKeychainAccess, KDEWalletKeychainAccess;
