@@ -4,6 +4,8 @@ import org.cryptomator.integrations.quickaccess.QuickAccessService;
 import org.cryptomator.integrations.revealpath.RevealPathService;
 import org.cryptomator.integrations.tray.TrayMenuController;
 import org.cryptomator.linux.autostart.FreedesktopAutoStartService;
+import org.cryptomator.linux.keychain.GnomeKeyringKeychainAccess;
+import org.cryptomator.linux.keychain.KDEWalletKeychainAccess;
 import org.cryptomator.linux.keychain.SecretServiceKeychainAccess;
 import org.cryptomator.linux.quickaccess.DolphinPlaces;
 import org.cryptomator.linux.quickaccess.NautilusBookmarks;
@@ -15,11 +17,14 @@ module org.cryptomator.integrations.linux {
 	requires org.slf4j;
 	requires org.freedesktop.dbus;
 	requires org.purejava.appindicator;
+	requires org.purejava.kwallet;
+	requires de.swiesend.secretservice;
 	requires org.purejava.secret;
 	requires java.xml;
+	requires org.cryptomator.integrations.linux;
 
 	provides AutoStartProvider with FreedesktopAutoStartService;
-	provides KeychainAccessProvider with SecretServiceKeychainAccess;
+	provides KeychainAccessProvider with SecretServiceKeychainAccess, GnomeKeyringKeychainAccess, KDEWalletKeychainAccess;
 	provides RevealPathService with DBusSendRevealPathService;
 	provides TrayMenuController with AppindicatorTrayMenuController;
 	provides QuickAccessService with NautilusBookmarks, DolphinPlaces;

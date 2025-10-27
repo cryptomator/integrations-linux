@@ -41,7 +41,9 @@
 		<!-- runtime dependencies -->
 
 		<api.version>1.7.0</api.version>
-		<secret-service.version>1.0.0</secret-service.version>
+		<secret-service.version>2.0.1-alpha</secret-service.version>
+		<kdewallet.version>1.4.0</kdewallet.version>
+		<secret-service-02.version>1.0.0</secret-service-02.version>
 		<slf4j.version>2.0.17</slf4j.version>
 		<appindicator.version>1.4.2</appindicator.version>
 
@@ -72,9 +74,19 @@
 			<version>${slf4j.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.purejava</groupId>
+			<groupId>de.swiesend</groupId>
 			<artifactId>secret-service</artifactId>
 			<version>${secret-service.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.purejava</groupId>
+			<artifactId>kdewallet</artifactId>
+			<version>${kdewallet.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.purejava</groupId>
+			<artifactId>secret-service</artifactId>
+			<version>${secret-service-02.version}</version>
 		</dependency>
 		<!-- Java bindings for appindicator -->
 		<dependency>
