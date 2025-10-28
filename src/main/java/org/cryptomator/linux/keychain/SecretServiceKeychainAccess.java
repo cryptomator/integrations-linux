@@ -20,10 +20,11 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Priority(900)
+@Priority(1100)
 @OperatingSystem(OperatingSystem.Value.LINUX)
 @DisplayName("Secret Service")
 public class SecretServiceKeychainAccess implements KeychainAccessProvider {
@@ -176,15 +177,21 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 					session.getService().ensureUnlocked(i);
 					var item = new Item(i);
 					var secret = item.getSecret(session.getSession());
+					Map<String, String> newAttribs = new HashMap<>(attribs.value());
+					newAttribs.put("server", "Cryptomator - already migrated");
+					var label = item.getLabel().value();
+					var itemProps = Item.createProperties(label, newAttribs);
+					var replace = collection.createItem(itemProps, secret, true);
+					assert replace.isSuccess() : "Replacing migrated item failed";
+					item.delete();
  					try {
 						storePassphrase(attribs.value().get("user"), "Cryptomator", new String(session.decrypt(secret)));
+						LOG.info("Successfully migrated password for vault {}", attribs.value().get("user"));
 					} catch (KeychainAccessException | NoSuchPaddingException | NoSuchAlgorithmException |
 							 InvalidAlgorithmParameterException | InvalidKeyException | BadPaddingException |
 							 IllegalBlockSizeException e) {
 						LOG.error("Migrating entry {} for vault {} failed", i.getPath(), attribs.value().get("user"));
 					 }
-					 item.delete();
-					 LOG.info("Successfully migrated password for vault {}", attribs.value().get("user"));
 				}
 			}
 		}
