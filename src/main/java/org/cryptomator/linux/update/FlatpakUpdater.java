@@ -1,9 +1,11 @@
 package org.cryptomator.linux.update;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.cryptomator.integrations.common.CheckAvailability;
 import org.cryptomator.integrations.common.DisplayName;
 import org.cryptomator.integrations.common.OperatingSystem;
-import org.cryptomator.integrations.common.Priority;
 import org.cryptomator.integrations.update.UpdateFailedException;
 import org.cryptomator.integrations.update.UpdateMechanism;
 import org.cryptomator.integrations.update.UpdateStep;
@@ -19,21 +21,26 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-@Priority(1000)
 @CheckAvailability
 @DisplayName("Update via Flatpak update")
 @OperatingSystem(OperatingSystem.Value.LINUX)
-public class FlatpakUpdater implements UpdateMechanism {
+public class FlatpakUpdater implements UpdateMechanism<FlatpakUpdateInfo> {
 
 	private static final Logger LOG = LoggerFactory.getLogger(FlatpakUpdater.class);
+	private static final String FLATHUB_API_BASE_URL = "https://flathub.org/api/v2/appstream/";
 	private static final String APP_NAME = "org.cryptomator.Cryptomator";
+	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
 	private final UpdatePortal portal;
 
@@ -48,31 +55,50 @@ public class FlatpakUpdater implements UpdateMechanism {
 	}
 
 	@Override
-	public boolean isUpdateAvailable(String installedVersion) {
-		var cdl = new CountDownLatch(1);
-		portal.setUpdateCheckerTaskFor(APP_NAME);
-		var checkTask = portal.getUpdateCheckerTaskFor(APP_NAME);
-		var updateAvailable = new AtomicBoolean(false);
-		checkTask.setOnSucceeded(updateVersion -> {
-			updateAvailable.set(UpdateMechanism.isUpdateAvailable(updateVersion, installedVersion));
-			cdl.countDown();
-		});
-		checkTask.setOnFailed(error -> {
-			LOG.warn("Error while checking for updates.", error);
-			cdl.countDown();
-		});
+	public FlatpakUpdateInfo checkForUpdate(String currentVersion, HttpClient httpClient) throws UpdateFailedException {
+		var uri = URI.create(FLATHUB_API_BASE_URL + APP_NAME);
+		var request = HttpRequest.newBuilder(uri).GET().build();
 		try {
-			cdl.await();
-			return updateAvailable.get();
+			var response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
+			if (response.statusCode() != 200) {
+				LOG.warn("GET {} resulted in status {}", uri, response.statusCode());
+				return null;
+			} else {
+				var appstream = OBJECT_MAPPER.reader().readValue(response.body(), AppstreamResponse.class);
+				var updateVersion = appstream.releases().stream()
+						.filter(release -> "stable".equalsIgnoreCase(release.type))
+						.max(Comparator.comparing(AppstreamReleases::timestamp)) // we're interested in the newest stable release
+						.map(AppstreamReleases::version)
+						.orElse("0.0.0"); // fallback should always be smaller than current version
+				if (UpdateMechanism.isUpdateAvailable(updateVersion, currentVersion)) {
+					return new FlatpakUpdateInfo(updateVersion, this);
+				} else {
+					return null;
+				}
+			}
+		} catch (IOException e) {
+			throw new UpdateFailedException("Check for updates failed.", e);
 		} catch (InterruptedException e) {
-			checkTask.cancel();
 			Thread.currentThread().interrupt();
-			return false;
+			LOG.warn("Update check interrupted", e);
+			return null;
 		}
 	}
 
+	@JsonIgnoreProperties(ignoreUnknown = true)
+	public record AppstreamResponse(
+			@JsonProperty("releases") List<AppstreamReleases> releases
+	) {}
+
+	@JsonIgnoreProperties(ignoreUnknown = true)
+	public record AppstreamReleases(
+			@JsonProperty("timestamp") long timestamp,
+			@JsonProperty("version") String version,
+			@JsonProperty("type") String type
+	) {}
+
 	@Override
-	public UpdateStep firstStep() throws UpdateFailedException {
+	public UpdateStep firstStep(FlatpakUpdateInfo updateInfo) throws UpdateFailedException {
 		var monitorPath = portal.CreateUpdateMonitor(UpdatePortal.OPTIONS_DUMMY);
 		if (monitorPath == null) {
 			throw new UpdateFailedException("Failed to create UpdateMonitor on DBus");
@@ -205,7 +231,7 @@ public class FlatpakUpdater implements UpdateMechanism {
 			Map<String, Variant<?>> options = UpdatePortal.OPTIONS_DUMMY;
 			var pid = portal.Spawn(cwdPath, argv, fds, envs, flags, options).longValue();
 			LOG.info("Spawned updated Cryptomator process with PID {}", pid);
-			return null;
+			return UpdateStep.EXIT;
 		}
 	}
 

@@ -22,6 +22,8 @@ module org.cryptomator.integrations.linux {
 	requires org.purejava.portal;
 	requires de.swiesend.secretservice;
 	requires java.xml;
+	requires java.net.http;
+	requires com.fasterxml.jackson.databind;
 
 	provides AutoStartProvider with FreedesktopAutoStartService;
 	provides KeychainAccessProvider with GnomeKeyringKeychainAccess, KDEWalletKeychainAccess;

@@ -39,12 +39,12 @@
 		<project.jdk.version>25</project.jdk.version>
 
 		<!-- runtime dependencies -->
-
 		<api.version>1.8.0-SNAPSHOT</api.version>
+		<slf4j.version>2.0.17</slf4j.version>
+		<jackson.version>2.20.0</jackson.version>
 		<secret-service.version>2.0.1-alpha</secret-service.version>
 		<kdewallet.version>1.4.0</kdewallet.version>
 		<flatpakupdateportal.version>1.1.0</flatpakupdateportal.version>
-		<slf4j.version>2.0.17</slf4j.version>
 		<appindicator.version>1.4.2</appindicator.version>
 
 		<!-- test dependencies -->
@@ -87,6 +87,12 @@
 			<artifactId>slf4j-api</artifactId>
 			<version>${slf4j.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>${jackson.version}</version>
+		</dependency>
+
 		<dependency>
 			<groupId>de.swiesend</groupId>
 			<artifactId>secret-service</artifactId>
