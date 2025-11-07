@@ -21,7 +21,7 @@ jobs:
       - name: Build and Test
         id: buildAndTest
         run: mvn -B clean verify
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: artifacts
           path: target/*.jar
