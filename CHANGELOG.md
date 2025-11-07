@@ -7,11 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 The changelog starts with version 1.6.1.
 Changes to prior versions can be found on the [Github release page](https://github.com/cryptomator/integrations-linux/releases).
 
-## [Unreleased]
+## [Unreleased](https://github.com/cryptomator/integrations-linux/compare/1.6.1...HEAD)
 
-No changes yet.
+* Require JDK 25
 
-## [1.6.1] - 2025-09-17
+## [1.6.1](https://github.com/cryptomator/integrations-linux/releases/tag/1.6.1) - 2025-09-17
 
 ### Changed
 
