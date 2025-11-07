@@ -9,7 +9,7 @@ Changes to prior versions can be found on the [Github release page](https://gith
 
 ## [Unreleased]
 
-No changes yet.
+* Require JDK 25
 
 ## [1.6.1] - 2025-09-17
 
