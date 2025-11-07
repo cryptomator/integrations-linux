@@ -9,5 +9,5 @@ This library uses the following JVM properties:
 
 ## Building Requirements
 
-* JDK 24
+* JDK 25
 * Maven 3.9.6
