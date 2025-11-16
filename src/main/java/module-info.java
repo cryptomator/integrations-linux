@@ -35,5 +35,5 @@ module org.cryptomator.integrations.linux {
 	opens org.cryptomator.linux.tray to org.cryptomator.integrations.api;
 	opens org.cryptomator.linux.quickaccess to org.cryptomator.integrations.api;
 	opens org.cryptomator.linux.autostart to org.cryptomator.integrations.api;
-	opens org.cryptomator.linux.update to org.cryptomator.integrations.api;
+	opens org.cryptomator.linux.update to org.cryptomator.integrations.api, com.fasterxml.jackson.databind;
 }
