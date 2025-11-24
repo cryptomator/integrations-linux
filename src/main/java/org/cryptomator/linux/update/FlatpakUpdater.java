@@ -70,6 +70,15 @@ public class FlatpakUpdater implements UpdateMechanism<FlatpakUpdateInfo> {
 						.max(Comparator.comparing(AppstreamReleases::timestamp)) // we're interested in the newest stable release
 						.map(AppstreamReleases::version)
 						.orElse("0.0.0"); // fallback should always be smaller than current version
+
+
+				// FIXME: remove this block! see https://github.com/cryptomator/cryptomator/issues/4058
+				if (currentVersion.startsWith("1.18.0-beta")) {
+					return new FlatpakUpdateInfo(updateVersion, this);
+				}
+				// END FIXME
+
+
 				if (UpdateMechanism.isUpdateAvailable(updateVersion, currentVersion)) {
 					return new FlatpakUpdateInfo(updateVersion, this);
 				} else {
