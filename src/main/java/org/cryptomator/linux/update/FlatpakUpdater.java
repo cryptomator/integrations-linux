@@ -73,7 +73,7 @@ public class FlatpakUpdater implements UpdateMechanism<FlatpakUpdateInfo> {
 
 
 				// FIXME: remove this block! see https://github.com/cryptomator/cryptomator/issues/4058
-				if (currentVersion.startsWith("1.18.0-beta")) {
+				if (currentVersion.startsWith("1.19.0-alpha") || currentVersion.startsWith("1.19.0-beta")) {
 					return new FlatpakUpdateInfo(updateVersion, this);
 				}
 				// END FIXME
