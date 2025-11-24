@@ -9,6 +9,10 @@ Changes to prior versions can be found on the [Github release page](https://gith
 
 ## [Unreleased](https://github.com/cryptomator/integrations-linux/compare/1.6.1...HEAD)
 
+### Added
+* Flatpak Update Mechanism (#117)
+
+### Changed
 * Require JDK 25
 
 ## [1.6.1](https://github.com/cryptomator/integrations-linux/releases/tag/1.6.1) - 2025-09-17
