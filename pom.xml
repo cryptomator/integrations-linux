@@ -39,11 +39,12 @@
 		<project.jdk.version>25</project.jdk.version>
 
 		<!-- runtime dependencies -->
-
-		<api.version>1.8.0-SNAPSHOT</api.version>
+		<api.version>1.8.0-beta1</api.version>
+		<slf4j.version>2.0.17</slf4j.version>
+		<jackson.version>2.20.0</jackson.version>
 		<secret-service.version>2.0.1-alpha</secret-service.version>
 		<kdewallet.version>1.4.0</kdewallet.version>
-		<slf4j.version>2.0.17</slf4j.version>
+		<flatpakupdateportal.version>1.1.0</flatpakupdateportal.version>
 		<appindicator.version>1.4.2</appindicator.version>
 
 		<!-- test dependencies -->
@@ -87,6 +88,12 @@
 			<version>${slf4j.version}</version>
 		</dependency>
 		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>${jackson.version}</version>
+		</dependency>
+
+		<dependency>
 			<groupId>de.swiesend</groupId>
 			<artifactId>secret-service</artifactId>
 			<version>${secret-service.version}</version>
@@ -101,6 +108,11 @@
 			<groupId>org.purejava</groupId>
 			<artifactId>libappindicator-gtk3-java-minimal</artifactId>
 			<version>${appindicator.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.purejava</groupId>
+			<artifactId>flatpak-update-portal</artifactId>
+			<version>${flatpakupdateportal.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
