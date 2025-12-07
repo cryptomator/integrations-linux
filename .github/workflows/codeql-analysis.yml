@@ -22,13 +22,13 @@ jobs:
     - uses: actions/setup-java@v5
       with:
         distribution: 'temurin'
-        java-version: 24
+        java-version: 25
         cache: 'maven'
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v3
+      uses: github/codeql-action/init@v4
       with:
         languages: java
     - name: Build
       run: mvn -B test
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
+      uses: github/codeql-action/analyze@v4
