@@ -41,7 +41,7 @@
 		<!-- runtime dependencies -->
 		<api.version>1.8.0-beta1</api.version>
 		<slf4j.version>2.0.17</slf4j.version>
-		<jackson.version>2.20.0</jackson.version>
+		<jackson.version>2.20.1</jackson.version>
 		<secret-service.version>2.0.1-alpha</secret-service.version>
 		<kdewallet.version>1.4.0</kdewallet.version>
 		<secret-service-02.version>1.0.1</secret-service-02.version>
@@ -55,11 +55,11 @@
 		<mvn-compiler.version>3.14.1</mvn-compiler.version>
 		<mvn-surefire.version>3.5.4</mvn-surefire.version>
 		<mvn-enforcer.version>3.6.2</mvn-enforcer.version>
-		<mvn-source.version>3.3.1</mvn-source.version>
+		<mvn-source.version>3.4.0</mvn-source.version>
 		<mvn-javadoc.version>3.12.0</mvn-javadoc.version>
 		<mvn-gpg.version>3.2.8</mvn-gpg.version>
 		<mvn-deploy.version>3.1.4</mvn-deploy.version>
-		<dependency-check.version>12.1.8</dependency-check.version>
+		<dependency-check.version>12.1.9</dependency-check.version>
 		<central-publishing.version>0.9.0</central-publishing.version>
 	</properties>
 
