@@ -41,10 +41,10 @@
 		<!-- runtime dependencies -->
 		<api.version>1.8.0-beta1</api.version>
 		<slf4j.version>2.0.17</slf4j.version>
-		<jackson.version>2.20.1</jackson.version>
+		<jackson.version>2.21.0</jackson.version>
 		<secret-service.version>2.0.1-alpha</secret-service.version>
 		<kdewallet.version>1.4.0</kdewallet.version>
-		<flatpakupdateportal.version>1.1.0</flatpakupdateportal.version>
+		<flatpakupdateportal.version>1.1.1</flatpakupdateportal.version>
 		<appindicator.version>1.4.2</appindicator.version>
 
 		<!-- test dependencies -->
