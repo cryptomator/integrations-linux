@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Unit tests for Secret Service access via Dbus.
  */
-@EnabledIfEnvironmentVariable(named = "DISPLAY", matches = ".*")
+@EnabledIfEnvironmentVariable(named = "DBUS_SESSION_BUS_ADDRESS", matches = ".*")
 public class SecretServiceKeychainAccessTest {
 
 	private static boolean isInstalled;
