@@ -154,7 +154,7 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 	@Override
 	public boolean isLocked() {
 		var call = collection.isLocked();
-		return call.isSuccess() && call.value();
+		return !call.isSuccess() || call.value();
 	}
 
 	private Map<String, String> createAttributes(String key) {
