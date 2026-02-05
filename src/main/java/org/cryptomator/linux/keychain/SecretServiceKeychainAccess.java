@@ -46,7 +46,6 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 		collection.addItemCreatedHandler(item -> LOG.debug("Item {} created", item.getPath()));
 		collection.addItemDeletedHandler(item -> LOG.debug("Item {} deleted", item.getPath()));
 
-		migrateKDEWalletEntries();
 	}
 
 	@Override
@@ -160,40 +159,5 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 
 	private Map<String, String> createAttributes(String key) {
 		return Map.of("Vault", key);
-	}
-
-	private void migrateKDEWalletEntries() {
-		session.setupEncryptedSession();
-		var getItems = collection.getItems();
-		if (getItems.isSuccess() && !getItems.value().isEmpty()) {
-			for (DBusPath i : getItems.value()) {
-				session.getService().ensureUnlocked(i);
-				var attribs = new Item(i).getAttributes();
-				if (attribs.isSuccess() &&
-						attribs.value().containsKey("server") &&
-						attribs.value().containsKey("user") &&
-						attribs.value().get("server").equals("Cryptomator")) {
-
-					session.getService().ensureUnlocked(i);
-					var item = new Item(i);
-					var secret = item.getSecret(session.getSession());
-					Map<String, String> newAttribs = new HashMap<>(attribs.value());
-					newAttribs.put("server", "Cryptomator - already migrated");
-					var label = item.getLabel().value();
-					var itemProps = Item.createProperties(label, newAttribs);
-					var replace = collection.createItem(itemProps, secret, true);
-					assert replace.isSuccess() : "Replacing migrated item failed";
-					item.delete();
- 					try {
-						storePassphrase(attribs.value().get("user"), "Cryptomator", new String(session.decrypt(secret)));
-						LOG.info("Successfully migrated password for vault {}", attribs.value().get("user"));
-					} catch (KeychainAccessException | NoSuchPaddingException | NoSuchAlgorithmException |
-							 InvalidAlgorithmParameterException | InvalidKeyException | BadPaddingException |
-							 IllegalBlockSizeException e) {
-						LOG.error("Migrating entry {} for vault {} failed", i.getPath(), attribs.value().get("user"));
-					 }
-				}
-			}
-		}
 	}
 }
