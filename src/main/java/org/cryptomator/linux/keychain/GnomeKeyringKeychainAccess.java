@@ -13,9 +13,13 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * @deprecated Cryptomator has Secret Service as the successor of KDE Wallet and GNOME keyring as a keychain backend since version 1.19.0
+ */
 @Priority(900)
 @OperatingSystem(OperatingSystem.Value.LINUX)
 @DisplayName("GNOME Keyring")
+@Deprecated(since = "1.7.0")
 public class GnomeKeyringKeychainAccess implements KeychainAccessProvider {
 
 	private static final Logger LOG = LoggerFactory.getLogger(GnomeKeyringKeychainAccess.class);

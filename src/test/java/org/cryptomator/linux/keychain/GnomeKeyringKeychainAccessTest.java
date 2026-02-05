@@ -18,11 +18,8 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Unit tests for GNOME keyring access via DBUS.
- * 
- * @deprecated Cryptomator has Secret Service as the successor of KDE Wallet and GNOME keyring as a keychain backend since version 1.19.0
  */
 @EnabledIfEnvironmentVariable(named = "DISPLAY", matches = ".*")
-@Deprecated(since = "1.6.2")
 public class GnomeKeyringKeychainAccessTest {
 
 	private static boolean isInstalled;
