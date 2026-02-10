@@ -44,6 +44,7 @@
 		<jackson.version>2.20.1</jackson.version>
 		<secret-service.version>2.0.1-alpha</secret-service.version>
 		<kdewallet.version>1.4.0</kdewallet.version>
+		<secret-service-02.version>1.1.0</secret-service-02.version>
 		<flatpakupdateportal.version>1.1.1</flatpakupdateportal.version>
 		<appindicator.version>1.4.2</appindicator.version>
 
@@ -102,6 +103,11 @@
 			<groupId>org.purejava</groupId>
 			<artifactId>kdewallet</artifactId>
 			<version>${kdewallet.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.purejava</groupId>
+			<artifactId>secret-service</artifactId>
+			<version>${secret-service-02.version}</version>
 		</dependency>
 		<!-- Java bindings for appindicator -->
 		<dependency>
