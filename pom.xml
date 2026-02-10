@@ -44,7 +44,7 @@
 		<jackson.version>2.20.1</jackson.version>
 		<secret-service.version>2.0.1-alpha</secret-service.version>
 		<kdewallet.version>1.4.0</kdewallet.version>
-		<flatpakupdateportal.version>1.1.0</flatpakupdateportal.version>
+		<flatpakupdateportal.version>1.1.1</flatpakupdateportal.version>
 		<appindicator.version>1.4.2</appindicator.version>
 
 		<!-- test dependencies -->
