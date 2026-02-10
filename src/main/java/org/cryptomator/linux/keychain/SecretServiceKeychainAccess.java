@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Priority(1100)
 @OperatingSystem(OperatingSystem.Value.LINUX)
@@ -24,6 +25,8 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 
 	private static final Logger LOG = LoggerFactory.getLogger(SecretServiceKeychainAccess.class);
 	private static final String LABEL_FOR_SECRET_IN_KEYRING = "Cryptomator";
+	private static final String ID_KEY = "Vault";
+	private static final String NAME_KEY = "Name";
 	private final EncryptedSession session = new EncryptedSession();
 	private final Collection collection = new Collection(new DBusPath(Static.DBusPath.DEFAULT_COLLECTION));
 
@@ -45,13 +48,13 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 	@Override
 	public void storePassphrase(String key, String displayName, CharSequence passphrase) throws KeychainAccessException {
 		try {
-			var call = collection.searchItems(createAttributes(key));
+			var call = collection.searchItems(withKey(key));
 			if (call.isSuccess()) {
 				if (call.value().isEmpty()) {
 					List<DBusPath> lockable = new ArrayList<>();
 					lockable.add(new DBusPath(collection.getDBusPath()));
 					session.getService().unlock(lockable);
-					var itemProps = Item.createProperties(LABEL_FOR_SECRET_IN_KEYRING, createAttributes(key, displayName));
+					var itemProps = Item.createProperties(LABEL_FOR_SECRET_IN_KEYRING, withKeyAndName(key, displayName));
 					var secret = session.encrypt(passphrase);
 					var created = collection.createItem(itemProps, secret, false);
 					if (!created.isSuccess()) {
@@ -71,7 +74,7 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 	@Override
 	public char[] loadPassphrase(String key) throws KeychainAccessException {
 		try {
-			var call = collection.searchItems(createAttributes(key));
+			var call = collection.searchItems(withKey(key));
 			if (call.isSuccess()) {
 				if (!call.value().isEmpty()) {
 					var path = call.value().getFirst();
@@ -92,7 +95,7 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 	@Override
 	public void deletePassphrase(String key) throws KeychainAccessException {
 		try {
-			var call = collection.searchItems(createAttributes(key));
+			var call = collection.searchItems(withKey(key));
 			if (call.isSuccess()) {
 				if (!call.value().isEmpty()) {
 					var path = call.value().getFirst();
@@ -117,12 +120,12 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 	@Override
 	public void changePassphrase(String key, String displayName, CharSequence passphrase) throws KeychainAccessException {
 		try {
-			var call = collection.searchItems(createAttributes(key));
+			var call = collection.searchItems(withKey(key));
 			if (call.isSuccess()) {
 				if (!call.value().isEmpty()) {
 					session.getService().ensureUnlocked(call.value().getFirst());
 					var secret = session.encrypt(passphrase);
-					var itemProps = Item.createProperties(LABEL_FOR_SECRET_IN_KEYRING, createAttributes(key, displayName));
+					var itemProps = Item.createProperties(LABEL_FOR_SECRET_IN_KEYRING, withKeyAndName(key, displayName));
 					var updated = collection.createItem(itemProps, secret, true);
 					if (!updated.isSuccess()) {
 						throw new KeychainAccessException("Updating password failed", updated.error());
@@ -151,20 +154,17 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 		return !call.isSuccess() || call.value();
 	}
 
-	private Map<String, String> createAttributes(String... args) {
-		if (args == null) {
+	private Map<String, String> withKey(String key) {
+		if (key == null) {
 			throw new IllegalArgumentException("Arguments must not be null");
 		}
+		return Map.of(ID_KEY, key);
+	}
 
-		return switch (args.length) {
-			case 1 -> Map.of("Vault", args[0]);
-			case 2 -> Map.of(
-					"Vault", args[0],
-					"Name", args[1]
-			);
-			default -> throw new IllegalArgumentException(
-					"Method requires one or two String arguments"
-			);
-		};
+	private Map<String, String> withKeyAndName(String key, String name) {
+		if (key == null) {
+			throw new IllegalArgumentException("Arguments must not be null");
+		}
+		return Map.of(ID_KEY, key, NAME_KEY, Objects.requireNonNullElse(name, ""));
 	}
 }
