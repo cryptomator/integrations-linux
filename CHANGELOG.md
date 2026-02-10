@@ -12,6 +12,7 @@ Changes to prior versions can be found on the [Github release page](https://gith
 ### Added
 * Flatpak Update Mechanism (#117)
 * New KeychainAccess service implementation based on freedesktop secret-service DBus API ([#125](https://github.com/cryptomator/integrations-linux/pull/125))
+* Use Maven wrapper for building
 
 ### Changed
 * Require JDK 25
