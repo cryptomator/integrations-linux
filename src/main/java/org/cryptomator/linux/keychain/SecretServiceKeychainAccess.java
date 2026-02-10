@@ -106,8 +106,7 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 						throw new KeychainAccessException("Deleting password failed", deleted.error());
 					}
 				} else {
-					var msg = "Vault " + key + " not found, deleting failed";
-					throw new KeychainAccessException(msg);
+					LOG.debug("Deleting entry with {}={} failed: No such item found", ID_KEY, key);
 				}
 			} else {
 				throw new KeychainAccessException("Deleting password failed", call.error());
