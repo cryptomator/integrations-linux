@@ -49,7 +49,7 @@
 		<appindicator.version>1.4.2</appindicator.version>
 
 		<!-- test dependencies -->
-		<junit.version>6.0.1</junit.version>
+		<junit.version>6.0.2</junit.version>
 
 		<!-- build plugin dependencies -->
 		<mvn-compiler.version>3.14.1</mvn-compiler.version>
