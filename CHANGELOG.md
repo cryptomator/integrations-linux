@@ -7,13 +7,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 The changelog starts with version 1.6.1.
 Changes to prior versions can be found on the [Github release page](https://github.com/cryptomator/integrations-linux/releases).
 
+## [Unreleased](https://github.com/cryptomator/integrations-linux/compare/1.7.0...HEAD)
+
+No changes yet.
+
+
 ## [1.7.0](https://github.com/cryptomator/integrations-linux/releases/1.7.0) - 2026-03-12
 
 ### Added
 * Flatpak Update Mechanism ([#117](https://github.com/cryptomator/integrations-linux/pull/117))
 * New KeychainAccess service implementation based on freedesktop secret-service DBus API ([#125](https://github.com/cryptomator/integrations-linux/pull/125))
 * Use Maven wrapper for building ([#140](https://github.com/cryptomator/integrations-linux/pull/140))
-
 
 ### Changed
 * Require JDK 25
