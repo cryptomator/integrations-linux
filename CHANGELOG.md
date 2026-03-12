@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 The changelog starts with version 1.6.1.
 Changes to prior versions can be found on the [Github release page](https://github.com/cryptomator/integrations-linux/releases).
 
-## [Unreleased](https://github.com/cryptomator/integrations-linux/compare/1.6.1...HEAD)
+## [1.7.0](https://github.com/cryptomator/integrations-linux/releases/1.7.0) - 2026-03-12
 
 ### Added
 * Flatpak Update Mechanism ([#117](https://github.com/cryptomator/integrations-linux/pull/117))
