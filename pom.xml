@@ -52,8 +52,8 @@
 		<junit.version>6.0.2</junit.version>
 
 		<!-- build plugin dependencies -->
-		<mvn-compiler.version>3.14.1</mvn-compiler.version>
-		<mvn-surefire.version>3.5.4</mvn-surefire.version>
+		<mvn-compiler.version>3.15.0</mvn-compiler.version>
+		<mvn-surefire.version>3.5.5</mvn-surefire.version>
 		<mvn-enforcer.version>3.6.2</mvn-enforcer.version>
 		<mvn-source.version>3.4.0</mvn-source.version>
 		<mvn-javadoc.version>3.12.0</mvn-javadoc.version>
