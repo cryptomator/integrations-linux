@@ -143,8 +143,13 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 
 	@Override
 	public boolean isSupported() {
-		return session.setupEncryptedSession() &&
-				session.getService().hasDefaultCollection();
+		try {
+			return session.setupEncryptedSession() &&
+					session.getService().hasDefaultCollection();
+		} catch (RuntimeException e) {
+			LOG.debug("Not supported due to exception in isSupported method", e);
+			return false;
+		}
 	}
 
 	@Override

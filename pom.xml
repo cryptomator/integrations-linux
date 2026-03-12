@@ -41,7 +41,7 @@
 		<!-- runtime dependencies -->
 		<api.version>1.8.0-beta1</api.version>
 		<slf4j.version>2.0.17</slf4j.version>
-		<jackson.version>2.21.0</jackson.version>
+		<jackson.version>2.21.1</jackson.version>
 		<secret-service.version>2.0.1-alpha</secret-service.version>
 		<kdewallet.version>1.4.0</kdewallet.version>
 		<secret-service-02.version>1.1.0</secret-service-02.version>
@@ -49,11 +49,11 @@
 		<appindicator.version>1.4.2</appindicator.version>
 
 		<!-- test dependencies -->
-		<junit.version>6.0.2</junit.version>
+		<junit.version>6.0.3</junit.version>
 
 		<!-- build plugin dependencies -->
-		<mvn-compiler.version>3.14.1</mvn-compiler.version>
-		<mvn-surefire.version>3.5.4</mvn-surefire.version>
+		<mvn-compiler.version>3.15.0</mvn-compiler.version>
+		<mvn-surefire.version>3.5.5</mvn-surefire.version>
 		<mvn-enforcer.version>3.6.2</mvn-enforcer.version>
 		<mvn-source.version>3.4.0</mvn-source.version>
 		<mvn-javadoc.version>3.12.0</mvn-javadoc.version>

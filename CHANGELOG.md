@@ -18,7 +18,7 @@ Changes to prior versions can be found on the [Github release page](https://gith
 ### Changed
 * Require JDK 25
 * Pin GitHub action versions used in CI ([#132](https://github.com/cryptomator/integrations-linux/pull/132))
-* Updated dependency `com.fasterxml.jackson.core:jackson-databind` from 2.20.0 to 2.21.0
+* Updated dependency `com.fasterxml.jackson.core:jackson-databind` from 2.20.0 to 2.21.1
 
 
 ## [1.6.1](https://github.com/cryptomator/integrations-linux/releases/tag/1.6.1) - 2025-09-17
