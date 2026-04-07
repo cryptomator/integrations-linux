@@ -8,9 +8,11 @@ The changelog starts with version 1.6.1.
 Changes to prior versions can be found on the [Github release page](https://github.com/cryptomator/integrations-linux/releases).
 
 ## [Unreleased](https://github.com/cryptomator/integrations-linux/compare/1.7.0...HEAD)
-
-No changes yet.
-
+### Changed
+* Updated dependencies:
+  - `org.cryptomator:integrations-api` from 1.8.0-beta1 to 1.8.0
+  - `com.fasterxml.jackson.core:jackson-databind` from 2.21.1 to 2.21.2
+  - ``org.purejava:secret-service` from 1.1.0 to 1.1.1
 
 ## [1.7.0](https://github.com/cryptomator/integrations-linux/releases/1.7.0) - 2026-03-12
 
