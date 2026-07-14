@@ -1,5 +1,8 @@
 package org.cryptomator.linux.revealpath;
 
+import org.cryptomator.integrations.common.DisplayName;
+import org.cryptomator.integrations.common.OperatingSystem;
+import org.cryptomator.integrations.common.Priority;
 import org.cryptomator.integrations.revealpath.RevealFailedException;
 import org.cryptomator.integrations.revealpath.RevealPathService;
 
@@ -17,6 +20,9 @@ import java.util.stream.Collectors;
 /**
  * RevealPathService provider using the <a href="https://freedesktop.org/wiki/Specifications/file-manager-interface/">DBus freedesktop FileManager1 interface</a> and dbus-send command.
  */
+@DisplayName("Freedesktop FileManager D-Bus Interface")
+@OperatingSystem(OperatingSystem.Value.LINUX)
+@Priority(100)
 public class DBusSendRevealPathService implements RevealPathService {
 
 	private static final String FILEMANAGER1_XML_ELEMENT = "<interface name=\"org.freedesktop.FileManager1\">";
