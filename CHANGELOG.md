@@ -8,11 +8,15 @@ The changelog starts with version 1.6.1.
 Changes to prior versions can be found on the [Github release page](https://github.com/cryptomator/integrations-linux/releases).
 
 ## [Unreleased](https://github.com/cryptomator/integrations-linux/compare/1.7.0...HEAD)
+### Fixed
+* Fixed DBus `RevealPathService` missing priority annotation resulting in fallback prio (fd26120)
+
 ### Changed
 * Updated dependencies:
-  - `org.cryptomator:integrations-api` from 1.8.0-beta1 to 1.8.0
-  - `com.fasterxml.jackson.core:jackson-databind` from 2.21.1 to 2.21.2
+  - `org.cryptomator:integrations-api` from 1.8.0-beta1 to 1.9.0
+  - `com.fasterxml.jackson.core:jackson-databind` from 2.21.1 to 2.22.1
   - `org.purejava:secret-service` from 1.1.0 to 1.1.1
+  - `org.slf4j:slf4j-api` from 2.0.17 to 2.0.18
 
 ## [1.7.0](https://github.com/cryptomator/integrations-linux/releases/1.7.0) - 2026-03-12
 
