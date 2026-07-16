@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 The changelog starts with version 1.6.1.
 Changes to prior versions can be found on the [Github release page](https://github.com/cryptomator/integrations-linux/releases).
 
-## [Unreleased](https://github.com/cryptomator/integrations-linux/compare/1.7.0...HEAD)
+## [1.8.0](https://github.com/cryptomator/integrations-linux/compare/1.7.0...HEAD)
 ### Fixed
 * Fixed DBus `RevealPathService` missing priority annotation resulting in fallback prio (fd26120)
 
