@@ -10,6 +10,7 @@ import org.purejava.secret.api.Collection;
 import org.purejava.secret.api.EncryptedSession;
 import org.purejava.secret.api.Item;
 import org.purejava.secret.api.Static;
+import org.purejava.secret.api.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +54,10 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 				if (call.value().isEmpty()) {
 					List<DBusPath> lockable = new ArrayList<>();
 					lockable.add(new DBusPath(collection.getDBusPath()));
-					session.getService().unlock(lockable);
+					var needLock = session.getService().unlock(lockable).value().b;
+					if (!"/".equals(needLock.getPath())) {
+						Util.promptAndGetResultAsArrayList(needLock);
+					}
 					var itemProps = Item.createProperties(LABEL_FOR_SECRET_IN_KEYRING, withKeyAndName(key, displayName));
 					var secret = session.encrypt(passphrase);
 					var created = collection.createItem(itemProps, secret, false);
