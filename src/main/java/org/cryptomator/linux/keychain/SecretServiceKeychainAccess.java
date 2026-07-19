@@ -54,9 +54,9 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 				if (call.value().isEmpty()) {
 					List<DBusPath> lockable = new ArrayList<>();
 					lockable.add(new DBusPath(collection.getDBusPath()));
-					var needLock = session.getService().unlock(lockable).value().b;
-					if (!"/".equals(needLock.getPath())) {
-						Util.promptAndGetResultAsArrayList(needLock);
+					var promptNeededToUnlock = session.getService().unlock(lockable);
+					if (promptNeededToUnlock.isSuccess() && !"/".equals(promptNeededToUnlock.value().b.getPath())) {
+						Util.promptAndGetResultAsArrayList(promptNeededToUnlock.value().b);
 					}
 					var itemProps = Item.createProperties(LABEL_FOR_SECRET_IN_KEYRING, withKeyAndName(key, displayName));
 					var secret = session.encrypt(passphrase);
