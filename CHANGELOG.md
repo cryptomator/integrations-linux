@@ -10,6 +10,7 @@ Changes to prior versions can be found on the [Github release page](https://gith
 ## [Unreleased](https://github.com/cryptomator/integrations-linux/compare/1.7.0...HEAD)
 ### Fixed
 * Fixed DBus `RevealPathService` missing priority annotation resulting in fallback prio (fd26120)
+* Fixed unhandled prompt when storing password with `SecretServiceKeychain` ([#156](https://github.com/cryptomator/integrations-linux/issues/156))
 
 ### Changed
 * Updated dependencies:
