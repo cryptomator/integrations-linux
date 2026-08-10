@@ -131,6 +131,7 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 				}
 
 				case Success<List<DBusPath>> success -> {
+					assertOnlyOneItem(success);
 					var path = success.value().getFirst();
 
 					session.getService().ensureUnlocked(path);
@@ -170,6 +171,7 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 							key);
 
 				case Success<List<DBusPath>> success -> {
+					assertOnlyOneItem(success);
 					var path = success.value().getFirst();
 					session.getService().ensureUnlocked(path);
 					var item = new Item(path);
@@ -227,6 +229,7 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 				}
 
 				case Success<List<DBusPath>> success -> {
+					assertOnlyOneItem(success);
 					var path = success.value().getFirst();
 					session.getService().ensureUnlocked(path);
 					var secret = session.encrypt(passphrase);
@@ -271,6 +274,14 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 					"Updating password failed for collection "
 							+ collection.getDBusPath(),
 					e
+			);
+		}
+	}
+
+	private static void assertOnlyOneItem(Success<List<DBusPath>> success) throws KeychainAccessException {
+		if (success.value().size() != 1) {
+			throw new KeychainAccessException(
+					"Expected exactly one item, but found " + success.value().size()
 			);
 		}
 	}
