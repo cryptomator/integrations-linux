@@ -67,6 +67,9 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 
 					switch (unlockResult) {
 						case Success<Pair<List<DBusPath>, DBusPath>> unlockSuccess -> {
+							/* The unlockResult variable may contain a prompt: when you call unlock for the collection
+							 in order to be able to store the secret within the collection, depending on whether
+							 a prompt is needed to unlock the collection or not, a prompt needs to be handled or not.*/
 							var prompt = unlockSuccess.value().b;
 							if (!"/".equals(prompt.getPath())) {
 								Util.promptAndGetResultAsArrayList(prompt);
