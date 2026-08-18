@@ -15,7 +15,7 @@ Changes to prior versions can be found on the [Github release page](https://gith
 ### Changed
 * Updated dependencies:
   - `org.cryptomator:integrations-api` from 1.8.0-beta1 to 1.9.0
-  - `com.fasterxml.jackson.core:jackson-databind` from 2.21.1 to 2.22.1
+  - `com.fasterxml.jackson.core:jackson-databind` from 2.21.1 to 2.21.6
   - `org.purejava:secret-service` from 1.1.0 to 1.1.1
   - `org.slf4j:slf4j-api` from 2.0.17 to 2.0.18
 
