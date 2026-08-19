@@ -127,20 +127,26 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 		try {
 			var call = collection.searchItems(withKey(key));
 
-			switch (call) {
+			return switch (call) {
+
 				case Success<List<DBusPath>> success
-						when success.value().isEmpty() -> {
-					return null;
-				}
+						when success.value().isEmpty() ->
+						null;
+
+				case Success<List<DBusPath>> success
+						when success.value().size() != 1 ->
+						throw new KeychainAccessException(
+								"Expected exactly one item, but found "
+										+ success.value().size()
+						);
 
 				case Success<List<DBusPath>> success -> {
-					assertOnlyOneItem(success);
 					var path = success.value().getFirst();
 
 					session.getService().ensureUnlocked(path);
 
 					var secret = new Item(path).getSecret(session.getSession());
-					return session.decrypt(secret);
+					yield session.decrypt(secret);
 				}
 
 				case Failure<List<DBusPath>> failure ->
@@ -149,7 +155,8 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 										+ collection.getDBusPath(),
 								failure.error()
 						);
-			}
+			};
+
 		} catch (KeychainAccessException e) {
 			throw e;
 		} catch (Exception e) {
@@ -167,14 +174,21 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 			var call = collection.searchItems(withKey(key));
 
 			switch (call) {
+
 				case Success<List<DBusPath>> success
 						when success.value().isEmpty() ->
-					LOG.debug("Deleting entry with {}={} failed: No such item found",
-							ID_KEY,
-							key);
+						LOG.debug("Deleting entry with {}={} failed: No such item found",
+								ID_KEY,
+								key);
+
+				case Success<List<DBusPath>> success
+						when success.value().size() > 1 ->
+						throw new KeychainAccessException(
+								"Expected exactly one item, but found "
+										+ success.value().size()
+						);
 
 				case Success<List<DBusPath>> success -> {
-					assertOnlyOneItem(success);
 					var path = success.value().getFirst();
 					session.getService().ensureUnlocked(path);
 					var item = new Item(path);
@@ -207,6 +221,7 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 								failure.error()
 						);
 			}
+
 		} catch (KeychainAccessException e) {
 			throw e;
 		} catch (Exception e) {
@@ -225,14 +240,21 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 			var call = collection.searchItems(withKey(key));
 
 			switch (call) {
+
 				case Success<List<DBusPath>> success
-						when success.value().isEmpty() -> {
-					var message = "Vault " + key + " not found, updating failed";
-					throw new KeychainAccessException(message);
-				}
+						when success.value().isEmpty() ->
+						throw new KeychainAccessException(
+								"Vault " + key + " not found, updating failed"
+						);
+
+				case Success<List<DBusPath>> success
+						when success.value().size() > 1 ->
+						throw new KeychainAccessException(
+								"Expected exactly one item, but found "
+										+ success.value().size()
+						);
 
 				case Success<List<DBusPath>> success -> {
-					assertOnlyOneItem(success);
 					var path = success.value().getFirst();
 					session.getService().ensureUnlocked(path);
 					var secret = session.encrypt(passphrase);
@@ -270,6 +292,7 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 								failure.error()
 						);
 			}
+
 		} catch (KeychainAccessException e) {
 			throw e;
 		} catch (Exception e) {
@@ -277,14 +300,6 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 					"Updating password failed for collection "
 							+ collection.getDBusPath(),
 					e
-			);
-		}
-	}
-
-	private static void assertOnlyOneItem(Success<List<DBusPath>> success) throws KeychainAccessException {
-		if (success.value().size() != 1) {
-			throw new KeychainAccessException(
-					"Expected exactly one item, but found " + success.value().size()
 			);
 		}
 	}
