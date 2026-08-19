@@ -134,7 +134,7 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 						null;
 
 				case Success<List<DBusPath>> success
-						when success.value().size() != 1 ->
+						when success.value().size() > 1 ->
 						throw new KeychainAccessException(
 								"Expected exactly one item, but found "
 										+ success.value().size()
