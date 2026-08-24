@@ -7,17 +7,20 @@ import org.cryptomator.integrations.keychain.KeychainAccessException;
 import org.cryptomator.integrations.keychain.KeychainAccessProvider;
 import org.freedesktop.dbus.DBusPath;
 import org.purejava.secret.api.Collection;
+import org.purejava.secret.api.DBusMessageHandler;
 import org.purejava.secret.api.EncryptedSession;
 import org.purejava.secret.api.Item;
+import org.purejava.secret.api.Pair;
 import org.purejava.secret.api.Static;
 import org.purejava.secret.api.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+
+import static org.purejava.secret.api.DBusMessageHandler.DBusResult.*;
 
 @Priority(1100)
 @OperatingSystem(OperatingSystem.Value.LINUX)
@@ -36,9 +39,15 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 		session.getService().addCollectionCreatedHandler(collection -> LOG.debug("Collection {} created", collection.getPath()));
 		session.getService().addCollectionDeletedHandler(collection -> LOG.debug("Collection {} deleted", collection.getPath()));
 		var getAlias = session.getService().readAlias("default");
-		if (getAlias.isSuccess() && "/".equals(getAlias.value().getPath())) {
-			// default alias is not set; set it to the login keyring
-			session.getService().setAlias("default", new DBusPath(Static.DBusPath.LOGIN_COLLECTION));
+		switch (getAlias) {
+			case Success<DBusPath> success-> {
+				if ("/".equals(success.value().getPath())) {
+					// default alias is not set; set it to the login keyring
+					session.getService().setAlias("default", new DBusPath(Static.DBusPath.LOGIN_COLLECTION));
+				}
+			}
+			case Failure<DBusPath> failure
+					-> LOG.warn("Getting the collection with the \"default\" alias failed with: {}", failure.error().getMessage());
 		}
 		collection.addItemChangedHandler(item -> LOG.debug("Item {} changed", item.getPath()));
 		collection.addItemCreatedHandler(item -> LOG.debug("Item {} created", item.getPath()));
@@ -50,28 +59,66 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 	public void storePassphrase(String key, String displayName, CharSequence passphrase) throws KeychainAccessException {
 		try {
 			var call = collection.searchItems(withKey(key));
-			if (call.isSuccess()) {
-				if (call.value().isEmpty()) {
-					List<DBusPath> lockable = new ArrayList<>();
-					lockable.add(new DBusPath(collection.getDBusPath()));
-					var promptNeededToUnlock = session.getService().unlock(lockable);
-					if (promptNeededToUnlock.isSuccess() && !"/".equals(promptNeededToUnlock.value().b.getPath())) {
-						Util.promptAndGetResultAsArrayList(promptNeededToUnlock.value().b);
+			switch (call) {
+				case DBusMessageHandler.DBusResult.Success<List<DBusPath>> success
+						when success.value().isEmpty() -> {
+					List<DBusPath> lockable = List.of(new DBusPath(collection.getDBusPath()));
+					var unlockResult = session.getService().unlock(lockable);
+
+					switch (unlockResult) {
+						case Success<Pair<List<DBusPath>, DBusPath>> unlockSuccess -> {
+							/* The unlockResult variable may contain a prompt: when you call unlock for the collection
+							 in order to be able to store the secret within the collection, depending on whether
+							 a prompt is needed to unlock the collection or not, a prompt needs to be handled or not.*/
+							var prompt = unlockSuccess.value().b;
+							if (!"/".equals(prompt.getPath())) {
+								Util.promptAndGetResultAsArrayList(prompt);
+							}
+						}
+						case Failure<Pair<List<DBusPath>, DBusPath>> unlockFailure ->
+								LOG.warn("Failed to unlock collection {}",
+										collection.getDBusPath(),
+										unlockFailure.error());
 					}
-					var itemProps = Item.createProperties(LABEL_FOR_SECRET_IN_KEYRING, withKeyAndName(key, displayName));
+
+					var itemProps = Item.createProperties(
+							LABEL_FOR_SECRET_IN_KEYRING,
+							withKeyAndName(key, displayName)
+					);
 					var secret = session.encrypt(passphrase);
 					var created = collection.createItem(itemProps, secret, false);
-					if (!created.isSuccess()) {
-						throw new KeychainAccessException("Storing password failed", created.error());
+
+					switch (created) {
+						case Success<Pair<DBusPath, DBusPath>> successful ->
+								LOG.debug("Created item {} on collection {}",
+										successful.value().a.getPath(),
+										collection.getDBusPath());
+						case Failure<Pair<DBusPath, DBusPath>> failure ->
+								throw new KeychainAccessException(
+										"Storing password failed for collection "
+												+ collection.getDBusPath(),
+										failure.error()
+								);
 					}
-				} else {
-					changePassphrase(key, displayName, passphrase);
 				}
-			} else {
-				throw new KeychainAccessException("Storing password failed", call.error());
+				case DBusMessageHandler.DBusResult.Success<List<DBusPath>> _ ->
+						changePassphrase(key, displayName, passphrase);
+
+				case DBusMessageHandler.DBusResult.Failure<List<DBusPath>> failure ->
+						throw new KeychainAccessException(
+								"Storing password failed for collection "
+										+ collection.getDBusPath(),
+								failure.error()
+						);
 			}
+		} catch (KeychainAccessException e) {
+			throw e;
 		} catch (Exception e) {
-			throw new KeychainAccessException("Storing password failed.", e);
+			throw new KeychainAccessException(
+					"Storing password failed for collection "
+							+ collection.getDBusPath(),
+					e
+			);
 		}
 	}
 
@@ -79,20 +126,45 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 	public char[] loadPassphrase(String key) throws KeychainAccessException {
 		try {
 			var call = collection.searchItems(withKey(key));
-			if (call.isSuccess()) {
-				if (!call.value().isEmpty()) {
-					var path = call.value().getFirst();
+
+			return switch (call) {
+
+				case Success<List<DBusPath>> success
+						when success.value().isEmpty() ->
+						null;
+
+				case Success<List<DBusPath>> success
+						when success.value().size() > 1 ->
+						throw new KeychainAccessException(
+								"Expected exactly one item, but found "
+										+ success.value().size()
+						);
+
+				case Success<List<DBusPath>> success -> {
+					var path = success.value().getFirst();
+
 					session.getService().ensureUnlocked(path);
+
 					var secret = new Item(path).getSecret(session.getSession());
-					return session.decrypt(secret);
-				} else {
-					return null;
+					yield session.decrypt(secret);
 				}
-			} else {
-				throw new KeychainAccessException("Loading password failed", call.error());
-			}
+
+				case Failure<List<DBusPath>> failure ->
+						throw new KeychainAccessException(
+								"Loading password failed for collection "
+										+ collection.getDBusPath(),
+								failure.error()
+						);
+			};
+
+		} catch (KeychainAccessException e) {
+			throw e;
 		} catch (Exception e) {
-			throw new KeychainAccessException("Loading password failed.", e);
+			throw new KeychainAccessException(
+					"Loading password failed for collection "
+							+ collection.getDBusPath(),
+					e
+			);
 		}
 	}
 
@@ -100,48 +172,135 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 	public void deletePassphrase(String key) throws KeychainAccessException {
 		try {
 			var call = collection.searchItems(withKey(key));
-			if (call.isSuccess()) {
-				if (!call.value().isEmpty()) {
-					var path = call.value().getFirst();
+
+			switch (call) {
+
+				case Success<List<DBusPath>> success
+						when success.value().isEmpty() ->
+						LOG.debug("Deleting entry with {}={} failed: No such item found",
+								ID_KEY,
+								key);
+
+				case Success<List<DBusPath>> success
+						when success.value().size() > 1 ->
+						throw new KeychainAccessException(
+								"Expected exactly one item, but found "
+										+ success.value().size()
+						);
+
+				case Success<List<DBusPath>> success -> {
+					var path = success.value().getFirst();
 					session.getService().ensureUnlocked(path);
 					var item = new Item(path);
-					var deleted = item.delete();
-					if (!deleted.isSuccess()) {
-						throw new KeychainAccessException("Deleting password failed", deleted.error());
+
+					switch (item.delete()) {
+						case Success<DBusPath> _ ->
+								LOG.debug("Deleted item {} from collection {}",
+										path.getPath(),
+										collection.getDBusPath());
+
+						case Failure<DBusPath> failure -> {
+							LOG.warn("Failed to delete item {} from collection {}",
+									path.getPath(),
+									collection.getDBusPath(),
+									failure.error());
+
+							throw new KeychainAccessException(
+									"Deleting password failed for collection "
+											+ collection.getDBusPath(),
+									failure.error()
+							);
+						}
 					}
-				} else {
-					LOG.debug("Deleting entry with {}={} failed: No such item found", ID_KEY, key);
 				}
-			} else {
-				throw new KeychainAccessException("Deleting password failed", call.error());
+
+				case Failure<List<DBusPath>> failure ->
+						throw new KeychainAccessException(
+								"Deleting password failed for collection "
+										+ collection.getDBusPath(),
+								failure.error()
+						);
 			}
+
+		} catch (KeychainAccessException e) {
+			throw e;
 		} catch (Exception e) {
-			throw new KeychainAccessException("Deleting password failed", e);
+			throw new KeychainAccessException(
+					"Deleting password failed for collection "
+							+ collection.getDBusPath(),
+					e
+			);
 		}
 	}
 
 	@Override
-	public void changePassphrase(String key, String displayName, CharSequence passphrase) throws KeychainAccessException {
+	public void changePassphrase(String key, String displayName, CharSequence passphrase)
+			throws KeychainAccessException {
 		try {
 			var call = collection.searchItems(withKey(key));
-			if (call.isSuccess()) {
-				if (!call.value().isEmpty()) {
-					session.getService().ensureUnlocked(call.value().getFirst());
+
+			switch (call) {
+
+				case Success<List<DBusPath>> success
+						when success.value().isEmpty() ->
+						throw new KeychainAccessException(
+								"Vault " + key + " not found, updating failed"
+						);
+
+				case Success<List<DBusPath>> success
+						when success.value().size() > 1 ->
+						throw new KeychainAccessException(
+								"Expected exactly one item, but found "
+										+ success.value().size()
+						);
+
+				case Success<List<DBusPath>> success -> {
+					var path = success.value().getFirst();
+					session.getService().ensureUnlocked(path);
 					var secret = session.encrypt(passphrase);
-					var itemProps = Item.createProperties(LABEL_FOR_SECRET_IN_KEYRING, withKeyAndName(key, displayName));
+					var itemProps = Item.createProperties(
+							LABEL_FOR_SECRET_IN_KEYRING,
+							withKeyAndName(key, displayName)
+					);
 					var updated = collection.createItem(itemProps, secret, true);
-					if (!updated.isSuccess()) {
-						throw new KeychainAccessException("Updating password failed", updated.error());
+
+					switch (updated) {
+						case Success<Pair<DBusPath, DBusPath>> _ ->
+								LOG.debug("Updated item {} in collection {}",
+										path.getPath(),
+										collection.getDBusPath());
+
+						case Failure<Pair<DBusPath, DBusPath>> failure -> {
+							LOG.warn("Failed to update item {} in collection {}",
+									path.getPath(),
+									collection.getDBusPath(),
+									failure.error());
+
+							throw new KeychainAccessException(
+									"Updating password failed for collection "
+											+ collection.getDBusPath(),
+									failure.error()
+							);
+						}
 					}
-				} else {
-					var msg = "Vault " + key + " not found, updating failed";
-					throw new KeychainAccessException(msg);
 				}
-			} else {
-				throw new KeychainAccessException("Updating password failed", call.error());
+
+				case Failure<List<DBusPath>> failure ->
+						throw new KeychainAccessException(
+								"Updating password failed for collection "
+										+ collection.getDBusPath(),
+								failure.error()
+						);
 			}
+
+		} catch (KeychainAccessException e) {
+			throw e;
 		} catch (Exception e) {
-			throw new KeychainAccessException("Updating password failed", e);
+			throw new KeychainAccessException(
+					"Updating password failed for collection "
+							+ collection.getDBusPath(),
+					e
+			);
 		}
 	}
 
@@ -158,8 +317,19 @@ public class SecretServiceKeychainAccess implements KeychainAccessProvider {
 
 	@Override
 	public boolean isLocked() {
-		var call = collection.isLocked();
-		return !call.isSuccess() || call.value();
+		return switch (collection.isLocked()) {
+			case Success<Boolean> success ->
+					success.value(); // yields the value
+
+			case Failure<Boolean> failure -> {
+				LOG.warn(
+						"Failed to determine lock state of collection {}",
+						collection.getDBusPath(),
+						failure.error()
+				);
+				yield true;
+			}
+		};
 	}
 
 	private Map<String, String> withKey(String key) {
