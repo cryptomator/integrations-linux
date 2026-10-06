@@ -13,11 +13,14 @@ Changes to prior versions can be found on the [Github release page](https://gith
 * Fixed unhandled prompt when storing password with `SecretServiceKeychain` ([#156](https://github.com/cryptomator/integrations-linux/issues/156))
 
 ### Changed
+* `SecretServiceKeychain` reports an error instead of silently using the first entry when the keyring contains more than one item for a vault (28c3347)
 * Updated dependencies:
   - `org.cryptomator:integrations-api` from 1.8.0-beta1 to 1.9.1
-  - `com.fasterxml.jackson.core:jackson-databind` from 2.21.1 to 2.21.6
-  - `org.purejava:secret-service` from 1.1.0 to 1.1.1
-  - `org.slf4j:slf4j-api` from 2.0.17 to 2.0.18
+  - `com.fasterxml.jackson.core:jackson-databind` from 2.21.1 to 2.21.7
+  - `org.purejava:secret-service` from 1.1.0 to 1.3.2
+  - `org.purejava:flatpak-update-portal` from 1.1.1 to 1.1.2
+  - `org.purejava:libappindicator-gtk3-java-minimal` from 1.4.2 to 1.4.3
+  - `org.slf4j:slf4j-api` from 2.0.17 to 2.0.20
 
 ## [1.7.0](https://github.com/cryptomator/integrations-linux/releases/1.7.0) - 2026-03-12
 
