@@ -7,7 +7,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 The changelog starts with version 1.6.1.
 Changes to prior versions can be found on the [Github release page](https://github.com/cryptomator/integrations-linux/releases).
 
-## [Unreleased](https://github.com/cryptomator/integrations-linux/compare/1.7.0...HEAD)
+## [Unreleased](https://github.com/cryptomator/integrations-linux/compare/1.8.0...HEAD)
+
+No changes yet.
+
+
+## [1.8.0](https://github.com/cryptomator/integrations-linux/releases/1.8.0) - 2026-10-06
 ### Fixed
 * Fixed DBus `RevealPathService` missing priority annotation resulting in fallback prio (fd26120)
 * Fixed unhandled prompt when storing password with `SecretServiceKeychain` ([#156](https://github.com/cryptomator/integrations-linux/issues/156))
